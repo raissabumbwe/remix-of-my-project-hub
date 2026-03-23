@@ -59,9 +59,11 @@ const ExploreScreen = ({ onStart }: { onStart: () => void }) => {
       transition={{ duration: 0.5 }}
     >
       <div className="relative flex-1">
-        <img
-          src={heroRdc}
-          alt="RDC"
+        <video
+          src="/videos/hero-rdc.mp4"
+          autoPlay
+          loop
+          playsInline
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-hero-gradient" />
