@@ -1,14 +1,15 @@
 import { Menu, Search, Bell, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo-infoslight.png";
 import { categories } from "@/data/mock-data";
 
 interface AppHeaderProps {
   onMenuOpen: () => void;
+  onLogoDoubleClick: () => void;
 }
 
-const AppHeader = ({ onMenuOpen }: AppHeaderProps) => {
+const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
@@ -22,7 +23,12 @@ const AppHeader = ({ onMenuOpen }: AppHeaderProps) => {
           <Menu className="w-5 h-5 text-foreground" />
         </button>
 
-        <img src={logo} alt="Infoslight.cd" className="h-8 object-contain" />
+        <img
+          src={logo}
+          alt="Infoslight.cd"
+          className="h-8 object-contain cursor-pointer"
+          onDoubleClick={onLogoDoubleClick}
+        />
 
         <div className="flex-1" />
 

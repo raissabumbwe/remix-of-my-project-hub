@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import Onboarding from "@/components/Onboarding";
 import AppHeader, { SideMenu } from "@/components/AppHeader";
@@ -8,6 +8,10 @@ import LiveTVPage from "@/components/LiveTVPage";
 import FMRadioPage from "@/components/FMRadioPage";
 import LibraryPage from "@/components/LibraryPage";
 import ExplorerPage from "@/components/ExplorerPage";
+import NotificationPrompt from "@/components/NotificationPrompt";
+import AdminLogin from "@/components/AdminLogin";
+import AdminDashboard from "@/components/AdminDashboard";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -15,10 +19,26 @@ const Index = () => {
   });
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const { isAdmin } = useAuth();
 
   const handleOnboardingComplete = () => {
     localStorage.setItem("infoslight_onboarded", "true");
     setShowOnboarding(false);
+  };
+
+  const handleLogoDoubleClick = () => {
+    if (isAdmin) {
+      setShowAdminDashboard(true);
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
+
+  const handleAdminLoginSuccess = () => {
+    setShowAdminLogin(false);
+    setShowAdminDashboard(true);
   };
 
   const renderContent = () => {
@@ -46,7 +66,10 @@ const Index = () => {
 
       {!showOnboarding && (
         <>
-          <AppHeader onMenuOpen={() => setMenuOpen(true)} />
+          <AppHeader
+            onMenuOpen={() => setMenuOpen(true)}
+            onLogoDoubleClick={handleLogoDoubleClick}
+          />
           <SideMenu
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
@@ -56,7 +79,21 @@ const Index = () => {
           />
           <main>{renderContent()}</main>
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          <NotificationPrompt />
         </>
+      )}
+
+      <AnimatePresence>
+        {showAdminLogin && (
+          <AdminLogin
+            onBack={() => setShowAdminLogin(false)}
+            onSuccess={handleAdminLoginSuccess}
+          />
+        )}
+      </AnimatePresence>
+
+      {showAdminDashboard && (
+        <AdminDashboard onBack={() => setShowAdminDashboard(false)} />
       )}
     </div>
   );
