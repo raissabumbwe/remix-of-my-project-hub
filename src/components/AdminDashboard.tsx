@@ -237,8 +237,44 @@ const ArticleForm = ({
     published: article?.published ?? false,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(article?.image_url ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const categories = ["Politique", "Économie", "Sport", "Société", "Éducation", "Développement", "Écologie", "Diplomatie"];
+
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filePath = `articles/${fileName}`;
+
+    const { error } = await supabase.storage.from("article-media").upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+    if (error) {
+      console.error("Upload error:", error);
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("article-media").getPublicUrl(filePath);
+    const publicUrl = urlData.publicUrl;
+
+    setForm((prev) => ({ ...prev, image_url: publicUrl }));
+    setMediaPreview(publicUrl);
+    setUploading(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+  };
+
+  const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
 
   const handleSave = async () => {
     setSaving(true);
@@ -267,7 +303,74 @@ const ArticleForm = ({
         <FormInput label="Résumé" value={form.summary} onChange={(v) => setForm({ ...form, summary: v })} multiline />
         <FormInput label="Contenu" value={form.content} onChange={(v) => setForm({ ...form, content: v })} multiline />
         <FormInput label="Auteur" value={form.author} onChange={(v) => setForm({ ...form, author: v })} />
-        <FormInput label="URL Image" value={form.image_url ?? ""} onChange={(v) => setForm({ ...form, image_url: v })} />
+
+        {/* Media Upload Section */}
+        <div>
+          <label className="text-xs font-medium text-foreground mb-1.5 block">Image / Vidéo</label>
+          
+          {/* Preview */}
+          {mediaPreview && (
+            <div className="relative mb-2 rounded-xl overflow-hidden bg-secondary">
+              {isVideo(mediaPreview) ? (
+                <video src={mediaPreview} controls className="w-full max-h-48 object-cover rounded-xl" />
+              ) : (
+                <img src={mediaPreview} alt="Aperçu" className="w-full max-h-48 object-cover rounded-xl" />
+              )}
+              <button
+                onClick={() => { setMediaPreview(null); setForm({ ...form, image_url: "" }); }}
+                className="absolute top-2 right-2 w-7 h-7 bg-background/80 backdrop-blur rounded-full flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
+          )}
+
+          {uploading && (
+            <div className="flex items-center gap-2 py-3 justify-center text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Envoi en cours...
+            </div>
+          )}
+
+          {!mediaPreview && !uploading && (
+            <div className="flex gap-2">
+              {/* Camera capture */}
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 h-20 bg-secondary rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors"
+              >
+                <Camera className="w-5 h-5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Caméra</span>
+              </button>
+              {/* Gallery pick */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 h-20 bg-secondary rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors"
+              >
+                <Image className="w-5 h-5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Galerie</span>
+              </button>
+            </div>
+          )}
+
+          {/* Hidden file inputs */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*,video/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
 
         <div>
           <label className="text-xs font-medium text-foreground mb-1.5 block">Catégorie</label>
