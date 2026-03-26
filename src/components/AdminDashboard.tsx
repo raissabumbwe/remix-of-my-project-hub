@@ -278,14 +278,27 @@ const ArticleForm = ({
   const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
 
   const handleSave = async () => {
-    setSaving(true);
-    if (article) {
-      await supabase.from("articles").update(form).eq("id", article.id);
-    } else {
-      await supabase.from("articles").insert(form as TablesInsert<"articles">);
+    if (!form.title || !form.summary || !form.author) {
+      toast.error("Veuillez remplir le titre, le résumé et l'auteur");
+      return;
     }
-    setSaving(false);
-    onSave();
+    setSaving(true);
+    try {
+      if (article) {
+        const { error } = await supabase.from("articles").update(form).eq("id", article.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("articles").insert(form as TablesInsert<"articles">);
+        if (error) throw error;
+      }
+      toast.success(article ? "Article modifié !" : "Article publié !");
+      onSave();
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error("Erreur lors de l'enregistrement : " + (err.message || "Erreur inconnue"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
