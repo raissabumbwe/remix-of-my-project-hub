@@ -409,7 +409,7 @@ const ArticleForm = ({
 
         <button
           onClick={handleSave}
-          disabled={saving || !form.title || !form.summary || !form.author}
+          disabled={saving}
           className="w-full h-11 bg-primary text-primary-foreground font-bold text-sm rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
