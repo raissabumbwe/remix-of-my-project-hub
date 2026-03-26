@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronLeft, Plus, Edit, Trash2, Tv, Radio, FileText,
-  BarChart3, Users, Eye, LogOut, Loader2, Save, X
+  BarChart3, Users, Eye, LogOut, Loader2, Save, X, Camera, Image, Video
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
