@@ -13,14 +13,14 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 bg-card/95 backdrop-blur-lg border-b-2 border-destructive safe-top">
+    <header className="sticky top-0 z-30 bg-destructive backdrop-blur-lg border-b-2 border-destructive safe-top">
       <div className="flex items-center h-14 px-4 gap-3">
         <button
           onClick={onMenuOpen}
-          className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
-          aria-label="Menu"
-        >
-          <Menu className="w-5 h-5 text-foreground" />
+           className="p-2 -ml-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           aria-label="Menu"
+         >
+           <Menu className="w-5 h-5 text-destructive-foreground" />
         </button>
 
         <img
@@ -53,20 +53,20 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
           )}
         </AnimatePresence>
 
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors"
-          aria-label="Rechercher"
-        >
-          <Search className="w-5 h-5 text-foreground" />
+         <button
+           onClick={() => setSearchOpen(true)}
+           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           aria-label="Rechercher"
+         >
+           <Search className="w-5 h-5 text-destructive-foreground" />
         </button>
 
-        <button
-          className="p-2 rounded-lg hover:bg-secondary transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-red rounded-full" />
+         <button
+           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors relative"
+           aria-label="Notifications"
+         >
+           <Bell className="w-5 h-5 text-destructive-foreground" />
+           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-foreground rounded-full" />
         </button>
       </div>
     </header>
