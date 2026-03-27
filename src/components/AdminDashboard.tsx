@@ -422,6 +422,147 @@ const ArticleForm = ({
   );
 };
 
+/* ===== Live Panel ===== */
+const LivePanel = () => {
+  const [streams, setStreams] = useState<{ id: string; title: string; facebook_url: string; is_active: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editStream, setEditStream] = useState<any>(null);
+
+  const fetchStreams = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("live_streams").select("*").order("created_at", { ascending: false });
+    setStreams((data as any[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchStreams(); }, []);
+
+  const deleteStream = async (id: string) => {
+    await supabase.from("live_streams").delete().eq("id", id);
+    toast.success("Live supprimé");
+    fetchStreams();
+  };
+
+  const toggleActive = async (id: string, current: boolean) => {
+    await supabase.from("live_streams").update({ is_active: !current }).eq("id", id);
+    fetchStreams();
+  };
+
+  if (showForm || editStream) {
+    return (
+      <LiveStreamForm
+        stream={editStream}
+        onSave={() => { setShowForm(false); setEditStream(null); fetchStreams(); }}
+        onCancel={() => { setShowForm(false); setEditStream(null); }}
+      />
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-bold text-foreground">Facebook Live</h2>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg">
+          <Plus className="w-4 h-4" /> Nouveau Live
+        </button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+      ) : streams.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8">Aucun live configuré</p>
+      ) : (
+        streams.map((s) => (
+          <div key={s.id} className="flex items-center gap-3 p-3 bg-card rounded-xl shadow-card">
+            <Play className="w-5 h-5 text-destructive flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground line-clamp-1">{s.title}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">{s.facebook_url}</p>
+              <span className={`text-[10px] font-bold ${s.is_active ? "text-green-600" : "text-muted-foreground"}`}>
+                {s.is_active ? "🔴 Actif" : "Inactif"}
+              </span>
+            </div>
+            <button onClick={() => toggleActive(s.id, s.is_active)} className="p-2 hover:bg-secondary rounded-lg" title="Activer/Désactiver">
+              <Eye className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <button onClick={() => setEditStream(s)} className="p-2 hover:bg-secondary rounded-lg">
+              <Edit className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <button onClick={() => deleteStream(s.id)} className="p-2 hover:bg-destructive/10 rounded-lg">
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </button>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+/* ===== Live Stream Form ===== */
+const LiveStreamForm = ({
+  stream,
+  onSave,
+  onCancel,
+}: {
+  stream?: any;
+  onSave: () => void;
+  onCancel: () => void;
+}) => {
+  const [title, setTitle] = useState(stream?.title ?? "");
+  const [facebookUrl, setFacebookUrl] = useState(stream?.facebook_url ?? "");
+  const [isActive, setIsActive] = useState(stream?.is_active ?? true);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!title || !facebookUrl) {
+      toast.error("Veuillez remplir le titre et le lien Facebook");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = { title, facebook_url: facebookUrl, is_active: isActive };
+      if (stream) {
+        const { error } = await supabase.from("live_streams").update(payload).eq("id", stream.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("live_streams").insert(payload);
+        if (error) throw error;
+      }
+      toast.success(stream ? "Live modifié !" : "Live ajouté !");
+      onSave();
+    } catch (err: any) {
+      toast.error("Erreur : " + (err.message || "Erreur inconnue"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-bold text-foreground">
+          {stream ? "Modifier le live" : "Nouveau live"}
+        </h2>
+        <button onClick={onCancel} className="p-2"><X className="w-5 h-5 text-muted-foreground" /></button>
+      </div>
+      <FormInput label="Titre du live" value={title} onChange={setTitle} />
+      <FormInput label="Lien Facebook Live" value={facebookUrl} onChange={setFacebookUrl} />
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="w-4 h-4 rounded" />
+        <span className="text-sm text-foreground">Activer le live</span>
+      </label>
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full h-11 bg-primary text-primary-foreground font-bold text-sm rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        Enregistrer
+      </button>
+    </div>
+  );
+};
+
 /* ===== TV Panel ===== */
 const TVPanel = () => {
   const [channels, setChannels] = useState<Tables<"tv_channels">[]>([]);
