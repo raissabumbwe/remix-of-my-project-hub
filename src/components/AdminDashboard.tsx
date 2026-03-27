@@ -27,6 +27,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const tabs = [
     { id: "stats" as const, label: "Stats", icon: BarChart3 },
     { id: "articles" as const, label: "Articles", icon: FileText },
+    { id: "live" as const, label: "Live", icon: Play },
     { id: "tv" as const, label: "TV", icon: Tv },
     { id: "radio" as const, label: "Radio", icon: Radio },
   ];
