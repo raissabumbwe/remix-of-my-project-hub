@@ -15,7 +15,7 @@ const SplashScreen = ({ onNext }: { onNext: () => void }) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-brand-gradient"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[hsl(0,85%,40%)]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
