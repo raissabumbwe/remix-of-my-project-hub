@@ -53,12 +53,12 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
           )}
         </AnimatePresence>
 
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors"
-          aria-label="Rechercher"
-        >
-          <Search className="w-5 h-5 text-foreground" />
+         <button
+           onClick={() => setSearchOpen(true)}
+           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           aria-label="Rechercher"
+         >
+           <Search className="w-5 h-5 text-destructive-foreground" />
         </button>
 
         <button
