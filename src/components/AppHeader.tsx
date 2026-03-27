@@ -61,12 +61,12 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
            <Search className="w-5 h-5 text-destructive-foreground" />
         </button>
 
-        <button
-          className="p-2 rounded-lg hover:bg-secondary transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-red rounded-full" />
+         <button
+           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors relative"
+           aria-label="Notifications"
+         >
+           <Bell className="w-5 h-5 text-destructive-foreground" />
+           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-foreground rounded-full" />
         </button>
       </div>
     </header>
