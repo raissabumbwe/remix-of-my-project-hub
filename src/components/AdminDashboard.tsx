@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
-type AdminTab = "stats" | "articles" | "tv" | "radio";
+type AdminTab = "stats" | "articles" | "tv" | "radio" | "live";
 
 interface AdminDashboardProps {
   onBack: () => void;
