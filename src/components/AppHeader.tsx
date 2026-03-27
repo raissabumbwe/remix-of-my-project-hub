@@ -17,10 +17,10 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
       <div className="flex items-center h-14 px-4 gap-3">
         <button
           onClick={onMenuOpen}
-          className="p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
-          aria-label="Menu"
-        >
-          <Menu className="w-5 h-5 text-foreground" />
+           className="p-2 -ml-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           aria-label="Menu"
+         >
+           <Menu className="w-5 h-5 text-destructive-foreground" />
         </button>
 
         <img
