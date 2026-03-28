@@ -294,6 +294,22 @@ const ArticleForm = ({
         if (error) throw error;
       }
       toast.success(article ? "Article modifié !" : "Article publié !");
+      
+      // Send push notification if publishing
+      if (form.published && (!article || !article.published)) {
+        try {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              title: `📰 ${form.title}`,
+              body: form.summary,
+            },
+          });
+          toast.success("Notification push envoyée !");
+        } catch (e) {
+          console.error("Push notification error:", e);
+        }
+      }
+      
       onSave();
     } catch (err: any) {
       console.error("Save error:", err);
