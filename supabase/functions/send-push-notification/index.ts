@@ -6,6 +6,63 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Get OAuth2 access token from service account
+async function getAccessToken(serviceAccount: any): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const payload = btoa(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: serviceAccount.token_uri,
+    iat: now,
+    exp: now + 3600,
+  }));
+
+  // Import the private key for signing
+  const pemContents = serviceAccount.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\n/g, "");
+
+  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signatureInput = new TextEncoder().encode(`${header}.${payload}`);
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    signatureInput
+  );
+
+  const base64Signature = btoa(
+    String.fromCharCode(...new Uint8Array(signature))
+  )
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const jwt = `${header}.${payload}.${base64Signature}`;
+
+  const tokenResponse = await fetch(serviceAccount.token_uri, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+
+  const tokenData = await tokenResponse.json();
+  if (!tokenData.access_token) {
+    throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`);
+  }
+  return tokenData.access_token;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -52,6 +109,22 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get Firebase service account
+    const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+    if (!serviceAccountJson) {
+      return new Response(
+        JSON.stringify({ error: "FIREBASE_SERVICE_ACCOUNT not configured" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    const accessToken = await getAccessToken(serviceAccount);
+    const projectId = serviceAccount.project_id;
+
     // Get all FCM tokens
     const { data: subscriptions } = await adminClient
       .from("push_subscriptions")
@@ -64,50 +137,41 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get FCM server key from secrets
-    const fcmServerKey = Deno.env.get("FCM_SERVER_KEY");
-    if (!fcmServerKey) {
-      return new Response(
-        JSON.stringify({ error: "FCM_SERVER_KEY not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Send to all tokens via FCM legacy API
-    const tokens = subscriptions.map((s) => s.endpoint);
-    
-    const fcmResponse = await fetch(
-      "https://fcm.googleapis.com/fcm/send",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `key=${fcmServerKey}`,
-        },
-        body: JSON.stringify({
-          registration_ids: tokens,
-          notification: {
-            title,
-            body: body || "",
-            icon: icon || "/pwa-192x192.png",
-            click_action: "/",
-          },
-        }),
-      }
+    // Send to all tokens via FCM v1 API
+    const results = await Promise.allSettled(
+      subscriptions.map((s) =>
+        fetch(
+          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              message: {
+                token: s.endpoint,
+                notification: {
+                  title,
+                  body: body || "",
+                },
+                webpush: {
+                  notification: {
+                    icon: icon || "/pwa-192x192.png",
+                  },
+                },
+              },
+            }),
+          }
+        ).then((r) => r.json())
+      )
     );
 
-    const fcmResult = await fcmResponse.json();
-    console.log("FCM Response:", fcmResult);
+    const sent = results.filter((r) => r.status === "fulfilled").length;
+    console.log("FCM v1 results:", JSON.stringify(results));
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        sent: tokens.length,
-        fcm_result: fcmResult,
-      }),
+      JSON.stringify({ success: true, sent, total: subscriptions.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
