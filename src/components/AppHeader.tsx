@@ -85,6 +85,13 @@ export const SideMenu = ({
   onClose: () => void;
   onCategorySelect: (cat: string) => void;
 }) => {
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {open && (
