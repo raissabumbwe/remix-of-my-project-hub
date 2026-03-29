@@ -79,6 +79,12 @@ const Index = () => {
     }
   };
 
+  // Show nothing while auth is loading
+  if (loading) return null;
+
+  // Show auth page if not logged in (after onboarding)
+  const needsAuth = !user && !showOnboarding;
+
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
       <AnimatePresence>
@@ -87,7 +93,9 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {!showOnboarding && (
+      {needsAuth && <AuthPage onSuccess={() => {}} />}
+
+      {!showOnboarding && user && (
         <>
           <AppHeader
             onMenuOpen={() => setMenuOpen(true)}
