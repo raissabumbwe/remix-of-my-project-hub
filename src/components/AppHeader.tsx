@@ -1,4 +1,5 @@
-import { Menu, Search, Bell, X } from "lucide-react";
+import { Menu, Search, Bell, X, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo-infoslight.png";
