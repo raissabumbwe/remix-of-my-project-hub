@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import Onboarding from "@/components/Onboarding";
+import AuthPage from "@/components/AuthPage";
 import AppHeader, { SideMenu } from "@/components/AppHeader";
 import BottomNav, { type TabId } from "@/components/BottomNav";
 import HomePage from "@/components/HomePage";
@@ -12,6 +13,7 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import AdminLogin from "@/components/AdminLogin";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -21,7 +23,28 @@ const Index = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
+
+  // Track online status
+  useEffect(() => {
+    if (!user) return;
+    const setOnline = async (online: boolean) => {
+      await supabase.from("profiles").update({
+        is_online: online,
+        last_seen_at: new Date().toISOString(),
+      }).eq("id", user.id);
+    };
+    setOnline(true);
+    const interval = setInterval(() => setOnline(true), 60000);
+    const handleVisibility = () => setOnline(!document.hidden);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("beforeunload", () => setOnline(false));
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      setOnline(false);
+    };
+  }, [user]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem("infoslight_onboarded", "true");
