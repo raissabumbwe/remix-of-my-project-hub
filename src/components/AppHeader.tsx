@@ -14,7 +14,7 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 bg-[hsl(0,85%,40%)] backdrop-blur-lg border-b-2 border-[hsl(0,85%,35%)] safe-top">
+    <header className="sticky top-0 z-30 bg-[hsl(0,100%,27%)] backdrop-blur-lg border-b-2 border-[hsl(0,100%,22%)] safe-top">
       <div className="flex items-center h-14 px-4 gap-3">
         <button
           onClick={onMenuOpen}
