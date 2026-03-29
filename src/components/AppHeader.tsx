@@ -1,4 +1,5 @@
-import { Menu, Search, Bell, X } from "lucide-react";
+import { Menu, Search, Bell, X, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo-infoslight.png";
@@ -84,6 +85,13 @@ export const SideMenu = ({
   onClose: () => void;
   onCategorySelect: (cat: string) => void;
 }) => {
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -133,7 +141,16 @@ export const SideMenu = ({
                 </button>
               </div>
             </nav>
-            <div className="p-5 border-t border-border">
+            <div className="p-5 border-t border-border space-y-3">
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-destructive bg-destructive/10 rounded-xl hover:bg-destructive/20 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Se déconnecter
+                </button>
+              )}
               <p className="text-xs text-muted-foreground text-center">
                 © 2026 Infoslight.cd — Ouvert au monde
               </p>
