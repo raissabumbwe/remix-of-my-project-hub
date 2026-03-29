@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
-type AdminTab = "stats" | "articles" | "tv" | "radio" | "live";
+type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users";
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -27,6 +27,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
   const tabs = [
     { id: "stats" as const, label: "Stats", icon: BarChart3 },
     { id: "articles" as const, label: "Articles", icon: FileText },
+    { id: "users" as const, label: "Abonnés", icon: Users },
     { id: "live" as const, label: "Live", icon: Play },
     { id: "tv" as const, label: "TV", icon: Tv },
     { id: "radio" as const, label: "Radio", icon: Radio },
@@ -80,11 +81,78 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       <div className="flex-1 overflow-y-auto">
         {activeTab === "stats" && <StatsPanel />}
         {activeTab === "articles" && <ArticlesPanel />}
+        {activeTab === "users" && <UsersPanel />}
         {activeTab === "live" && <LivePanel />}
         {activeTab === "tv" && <TVPanel />}
         {activeTab === "radio" && <RadioPanel />}
       </div>
     </motion.div>
+  );
+};
+
+/* ===== Users Panel ===== */
+const UsersPanel = () => {
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("profiles").select("*").order("is_online", { ascending: false });
+      setProfiles(data ?? []);
+      setLoading(false);
+    };
+    fetchProfiles();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel("profiles-online")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        fetchProfiles();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const onlineCount = profiles.filter((p) => p.is_online).length;
+
+  return (
+    <div className="p-4 space-y-4">
+      <h2 className="font-display text-lg font-bold text-foreground">Abonnés</h2>
+      <div className="flex gap-3">
+        <div className="flex-1 p-4 bg-card rounded-xl shadow-card text-center">
+          <p className="text-2xl font-bold text-green-600">{onlineCount}</p>
+          <p className="text-xs text-muted-foreground">En ligne</p>
+        </div>
+        <div className="flex-1 p-4 bg-card rounded-xl shadow-card text-center">
+          <p className="text-2xl font-bold text-foreground">{profiles.length}</p>
+          <p className="text-xs text-muted-foreground">Total</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {profiles.map((p) => (
+            <div key={p.id} className="flex items-center gap-3 p-3 bg-card rounded-xl shadow-card">
+              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${p.is_online ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  {p.full_name || "Utilisateur"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {p.is_online ? "En ligne" : `Vu ${new Date(p.last_seen_at).toLocaleDateString("fr-FR")}`}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
