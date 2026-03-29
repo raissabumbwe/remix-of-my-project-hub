@@ -81,6 +81,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       <div className="flex-1 overflow-y-auto">
         {activeTab === "stats" && <StatsPanel />}
         {activeTab === "articles" && <ArticlesPanel />}
+        {activeTab === "users" && <UsersPanel />}
         {activeTab === "live" && <LivePanel />}
         {activeTab === "tv" && <TVPanel />}
         {activeTab === "radio" && <RadioPanel />}
