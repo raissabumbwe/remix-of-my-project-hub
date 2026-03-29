@@ -141,7 +141,16 @@ export const SideMenu = ({
                 </button>
               </div>
             </nav>
-            <div className="p-5 border-t border-border">
+            <div className="p-5 border-t border-border space-y-3">
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-destructive bg-destructive/10 rounded-xl hover:bg-destructive/20 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Se déconnecter
+                </button>
+              )}
               <p className="text-xs text-muted-foreground text-center">
                 © 2026 Infoslight.cd — Ouvert au monde
               </p>
