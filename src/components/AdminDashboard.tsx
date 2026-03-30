@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import RichTextEditor from "@/components/RichTextEditor";
 
 type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users";
 
