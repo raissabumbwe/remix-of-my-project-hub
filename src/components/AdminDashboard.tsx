@@ -402,7 +402,10 @@ const ArticleForm = ({
       <div className="space-y-3">
         <FormInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
         <FormInput label="Résumé" value={form.summary} onChange={(v) => setForm({ ...form, summary: v })} multiline />
-        <FormInput label="Contenu" value={form.content} onChange={(v) => setForm({ ...form, content: v })} multiline />
+        <div>
+          <label className="text-xs font-medium text-foreground mb-1.5 block">Contenu</label>
+          <RichTextEditor content={form.content} onChange={(v) => setForm({ ...form, content: v })} />
+        </div>
         <FormInput label="Auteur" value={form.author} onChange={(v) => setForm({ ...form, author: v })} />
 
         {/* Media Upload Section */}
