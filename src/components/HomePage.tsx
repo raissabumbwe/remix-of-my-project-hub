@@ -137,9 +137,10 @@ const ArticleDetail = ({
           {article.summary}
         </p>
         {article.content && (
-          <p className="text-foreground/80 text-sm leading-relaxed mb-6">
-            {article.content}
-          </p>
+          <div
+            className="prose prose-sm max-w-none text-foreground/80 leading-relaxed mb-6"
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
         )}
         <div className="flex items-center gap-3 pt-4 border-t border-border">
           <span className="text-xs text-muted-foreground">Partager :</span>
