@@ -209,9 +209,8 @@ const ArticleDetail = ({
         </p>
         {article.content && (
           <div
-            className="prose prose-sm max-w-none text-foreground/80 leading-relaxed mb-6 [&_span[style]]:!text-[color:inherit] [&_[style*='font']]:!font-[inherit]"
+            className="prose prose-sm max-w-none text-foreground/80 leading-relaxed mb-6"
             dangerouslySetInnerHTML={{ __html: article.content }}
-            style={{ }}
           />
         )}
 
