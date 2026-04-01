@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Clock, Share2, ChevronLeft, Loader2, Heart, MessageCircle, Send, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Clock, Share2, ChevronLeft, ChevronRight, Loader2, Heart, MessageCircle, Send, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { categories } from "@/data/mock-data";
@@ -319,6 +319,7 @@ const HomePage = () => {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -333,6 +334,18 @@ const HomePage = () => {
     };
     fetchArticles();
   }, []);
+
+  const latestFive = articles.slice(0, 5);
+
+  const nextSlide = useCallback(() => {
+    setSlideIndex((i) => (i + 1) % (latestFive.length || 1));
+  }, [latestFive.length]);
+
+  useEffect(() => {
+    if (latestFive.length <= 1) return;
+    const timer = setInterval(nextSlide, 4000);
+    return () => clearInterval(timer);
+  }, [nextSlide, latestFive.length]);
 
   const filteredArticles =
     activeCategory === "À la Une"
@@ -350,6 +363,78 @@ const HomePage = () => {
 
   return (
     <div className="pb-20">
+      {/* Hero Slider - 5 derniers articles */}
+      {!loading && latestFive.length > 0 && (
+        <div className="relative mb-4">
+          <div className="overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.button
+                key={latestFive[slideIndex]?.id}
+                initial={{ opacity: 0, x: 60 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -60 }}
+                transition={{ duration: 0.4 }}
+                className="relative w-full text-left"
+                onClick={() => setSelectedArticle(latestFive[slideIndex])}
+              >
+                {latestFive[slideIndex]?.image_url ? (
+                  <img
+                    src={latestFive[slideIndex].image_url!}
+                    alt={latestFive[slideIndex].title}
+                    className="w-full h-48 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-secondary flex items-center justify-center">
+                    <span className="text-5xl">📰</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-1.5">
+                    {latestFive[slideIndex].category}
+                  </span>
+                  <h2 className="text-white font-display text-base font-bold leading-snug line-clamp-2">
+                    {latestFive[slideIndex].title}
+                  </h2>
+                  <p className="text-white/70 text-xs mt-1 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {timeAgo(latestFive[slideIndex].created_at)}
+                  </p>
+                </div>
+              </motion.button>
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation arrows */}
+          {latestFive.length > 1 && (
+            <>
+              <button
+                onClick={() => setSlideIndex((i) => (i - 1 + latestFive.length) % latestFive.length)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/50 text-white rounded-full backdrop-blur-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSlideIndex((i) => (i + 1) % latestFive.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/50 text-white rounded-full backdrop-blur-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
+          )}
+
+          {/* Dots */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {latestFive.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setSlideIndex(i)}
+                className={`w-2 h-2 rounded-full transition-all ${i === slideIndex ? "bg-white w-4" : "bg-white/50"}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Category pills */}
       <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
         {categories.map((cat) => (
@@ -380,30 +465,13 @@ const HomePage = () => {
         </div>
       ) : (
         <div className="px-4 space-y-3">
-          {/* Featured article */}
-          {filteredArticles[0] && (
+          {filteredArticles.map((article) => (
             <ArticleCard
-              article={filteredArticles[0]}
-              featured
-              onClick={() => setSelectedArticle(filteredArticles[0])}
+              key={article.id}
+              article={article}
+              onClick={() => setSelectedArticle(article)}
             />
-          )}
-
-          {/* Article list */}
-          {filteredArticles.length > 1 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Dernières actualités
-              </h3>
-              {filteredArticles.slice(1).map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  onClick={() => setSelectedArticle(article)}
-                />
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>
