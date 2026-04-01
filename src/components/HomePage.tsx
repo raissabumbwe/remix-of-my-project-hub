@@ -319,6 +319,7 @@ const HomePage = () => {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -334,6 +335,18 @@ const HomePage = () => {
     fetchArticles();
   }, []);
 
+  const latestFive = articles.slice(0, 5);
+
+  const nextSlide = useCallback(() => {
+    setSlideIndex((i) => (i + 1) % (latestFive.length || 1));
+  }, [latestFive.length]);
+
+  useEffect(() => {
+    if (latestFive.length <= 1) return;
+    const timer = setInterval(nextSlide, 4000);
+    return () => clearInterval(timer);
+  }, [nextSlide, latestFive.length]);
+
   const filteredArticles =
     activeCategory === "À la Une"
       ? articles
@@ -347,19 +360,6 @@ const HomePage = () => {
       />
     );
   }
-
-  const latestFive = articles.slice(0, 5);
-  const [slideIndex, setSlideIndex] = useState(0);
-
-  const nextSlide = useCallback(() => {
-    setSlideIndex((i) => (i + 1) % latestFive.length);
-  }, [latestFive.length]);
-
-  useEffect(() => {
-    if (latestFive.length <= 1) return;
-    const timer = setInterval(nextSlide, 4000);
-    return () => clearInterval(timer);
-  }, [nextSlide, latestFive.length]);
 
   return (
     <div className="pb-20">
