@@ -27,7 +27,7 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
         <img
           src={logo}
           alt="Infoslight.cd"
-          className="h-8 object-contain cursor-pointer"
+          className="h-11 object-contain cursor-pointer"
           onDoubleClick={onLogoDoubleClick}
         />
 
