@@ -6,17 +6,27 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function base64url(data: string): string {
+  return btoa(data).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64urlFromBytes(bytes: Uint8Array): string {
+  return base64url(String.fromCharCode(...bytes));
+}
+
 // Get OAuth2 access token from service account
 async function getAccessToken(serviceAccount: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({
-    iss: serviceAccount.client_email,
-    scope: "https://www.googleapis.com/auth/firebase.messaging",
-    aud: serviceAccount.token_uri,
-    iat: now,
-    exp: now + 3600,
-  }));
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const payload = base64url(
+    JSON.stringify({
+      iss: serviceAccount.client_email,
+      scope: "https://www.googleapis.com/auth/firebase.messaging",
+      aud: serviceAccount.token_uri,
+      iat: now,
+      exp: now + 3600,
+    })
+  );
 
   // Import the private key for signing
   const pemContents = serviceAccount.private_key
@@ -41,15 +51,11 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
     signatureInput
   );
 
-  const base64Signature = btoa(
-    String.fromCharCode(...new Uint8Array(signature))
-  )
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  const base64Signature = base64urlFromBytes(new Uint8Array(signature));
 
   const jwt = `${header}.${payload}.${base64Signature}`;
 
+  console.log("Requesting Google access token...");
   const tokenResponse = await fetch(serviceAccount.token_uri, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -58,8 +64,10 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 
   const tokenData = await tokenResponse.json();
   if (!tokenData.access_token) {
+    console.error("Failed to get access token:", JSON.stringify(tokenData));
     throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`);
   }
+  console.log("Access token obtained successfully");
   return tokenData.access_token;
 }
 
@@ -70,6 +78,7 @@ Deno.serve(async (req) => {
 
   try {
     const { title, body, icon } = await req.json();
+    console.log("Push notification request:", { title, body });
 
     if (!title) {
       return new Response(JSON.stringify({ error: "title is required" }), {
@@ -87,9 +96,12 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader || "" } },
     });
-    const { data: { user } } = await userClient.auth.getUser();
+    const {
+      data: { user },
+    } = await userClient.auth.getUser();
 
     if (!user) {
+      console.error("Unauthorized: no user found");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -103,6 +115,7 @@ Deno.serve(async (req) => {
     });
 
     if (!isAdmin) {
+      console.error("Forbidden: user is not admin");
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -112,6 +125,7 @@ Deno.serve(async (req) => {
     // Get Firebase service account
     const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
     if (!serviceAccountJson) {
+      console.error("FIREBASE_SERVICE_ACCOUNT not configured");
       return new Response(
         JSON.stringify({ error: "FIREBASE_SERVICE_ACCOUNT not configured" }),
         {
@@ -126,9 +140,11 @@ Deno.serve(async (req) => {
     const projectId = serviceAccount.project_id;
 
     // Get all FCM tokens
-    const { data: subscriptions } = await adminClient
+    const { data: subscriptions, error: subError } = await adminClient
       .from("push_subscriptions")
       .select("endpoint");
+
+    console.log("Subscriptions found:", subscriptions?.length ?? 0, "error:", subError);
 
     if (!subscriptions || subscriptions.length === 0) {
       return new Response(
@@ -139,8 +155,8 @@ Deno.serve(async (req) => {
 
     // Send to all tokens via FCM v1 API
     const results = await Promise.allSettled(
-      subscriptions.map((s) =>
-        fetch(
+      subscriptions.map(async (s) => {
+        const fcmResponse = await fetch(
           `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
           {
             method: "POST",
@@ -163,12 +179,25 @@ Deno.serve(async (req) => {
               },
             }),
           }
-        ).then((r) => r.json())
-      )
+        );
+        const result = await fcmResponse.json();
+        console.log(`FCM response for token ${s.endpoint.substring(0, 20)}...:`, JSON.stringify(result));
+        
+        // If token is invalid, remove it
+        if (result.error && (result.error.code === 404 || result.error.code === 400 || 
+            result.error.details?.some((d: any) => d["@type"]?.includes("UNREGISTERED")))) {
+          console.log("Removing invalid token:", s.endpoint.substring(0, 20));
+          await adminClient.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
+        }
+        
+        return result;
+      })
     );
 
-    const sent = results.filter((r) => r.status === "fulfilled").length;
-    console.log("FCM v1 results:", JSON.stringify(results));
+    const sent = results.filter(
+      (r) => r.status === "fulfilled" && !(r.value as any)?.error
+    ).length;
+    console.log("FCM results summary: sent", sent, "of", subscriptions.length);
 
     return new Response(
       JSON.stringify({ success: true, sent, total: subscriptions.length }),
@@ -176,12 +205,9 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("Error sending push:", err);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
