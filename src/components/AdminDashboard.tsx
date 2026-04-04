@@ -37,6 +37,8 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     { id: "live" as const, label: "Live", icon: Play },
     { id: "tv" as const, label: "TV", icon: Tv },
     { id: "radio" as const, label: "Radio", icon: Radio },
+    { id: "library" as const, label: "Livres", icon: BookOpen },
+    { id: "explorer" as const, label: "Explorer", icon: Compass },
   ];
 
   return (
