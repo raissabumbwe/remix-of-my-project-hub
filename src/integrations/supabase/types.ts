@@ -121,6 +121,93 @@ export type Database = {
         }
         Relationships: []
       }
+      books: {
+        Row: {
+          author: string
+          category: string
+          cover_url: string | null
+          created_at: string
+          description: string
+          file_url: string | null
+          id: string
+          price: string
+          published: boolean
+          rating: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          file_url?: string | null
+          id?: string
+          price?: string
+          published?: boolean
+          rating?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          file_url?: string | null
+          id?: string
+          price?: string
+          published?: boolean
+          rating?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      explorer_items: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          image_url: string | null
+          published: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       live_streams: {
         Row: {
           created_at: string
