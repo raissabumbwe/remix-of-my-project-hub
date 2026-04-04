@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, Plus, Edit, Trash2, Tv, Radio, FileText,
   BarChart3, Users, Eye, LogOut, Loader2, Save, X, Camera, Image, Video, Play,
-  TrendingUp, Activity, Globe, Clock, Heart, MessageCircle, Zap, Shield
+  TrendingUp, Activity, Globe, Clock, Heart, MessageCircle, Zap, Shield,
+  BookOpen, MapPin, Compass
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 
-type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users";
+type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users" | "library" | "explorer";
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -36,6 +37,8 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     { id: "live" as const, label: "Live", icon: Play },
     { id: "tv" as const, label: "TV", icon: Tv },
     { id: "radio" as const, label: "Radio", icon: Radio },
+    { id: "library" as const, label: "Livres", icon: BookOpen },
+    { id: "explorer" as const, label: "Explorer", icon: Compass },
   ];
 
   return (
@@ -67,7 +70,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
       {/* Tab bar floating over header */}
       <div className="-mt-10 mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10">
-        <div className="flex">
+        <div className="flex overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -113,6 +116,8 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             {activeTab === "live" && <LivePanel />}
             {activeTab === "tv" && <TVPanel />}
             {activeTab === "radio" && <RadioPanel />}
+            {activeTab === "library" && <LibraryPanel />}
+            {activeTab === "explorer" && <ExplorerPanel />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -1112,6 +1117,468 @@ const MediaForm = ({
       >
         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
         Enregistrer
+      </button>
+    </div>
+  );
+};
+
+/* ===== Library Panel ===== */
+const LibraryPanel = () => {
+  const [books, setBooks] = useState<Tables<"books">[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState<Tables<"books"> | null>(null);
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("books").select("*").order("created_at", { ascending: false });
+    setBooks(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchBooks(); }, []);
+
+  const deleteBook = async (id: string) => {
+    await supabase.from("books").delete().eq("id", id);
+    toast.success("Livre supprimé");
+    fetchBooks();
+  };
+
+  if (showForm || editItem) {
+    return <BookForm book={editItem} onSave={() => { setShowForm(false); setEditItem(null); fetchBooks(); }} onCancel={() => { setShowForm(false); setEditItem(null); }} />;
+  }
+
+  return (
+    <div className="px-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Bibliothèque</h2>
+          <p className="text-xs text-muted-foreground">{books.length} livre{books.length > 1 ? "s" : ""}</p>
+        </div>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-[hsl(var(--brand-blue-light))] text-primary-foreground text-xs font-bold rounded-xl shadow-md">
+          <Plus className="w-4 h-4" /> Ajouter
+        </button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : books.length === 0 ? (
+        <Card className="border-dashed border-2 border-border">
+          <CardContent className="py-12 text-center">
+            <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Aucun livre</p>
+          </CardContent>
+        </Card>
+      ) : (
+        books.map((book) => (
+          <Card key={book.id} className="border-border/50 shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3 p-4">
+                {book.cover_url ? (
+                  <img src={book.cover_url} alt="" className="w-12 h-16 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-16 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl flex-shrink-0">📘</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground line-clamp-1">{book.title}</p>
+                  <p className="text-xs text-muted-foreground">{book.author} · {book.price}</p>
+                  <span className={`text-[10px] font-bold ${book.published ? "text-green-600" : "text-muted-foreground"}`}>
+                    {book.published ? "✓ Publié" : "Brouillon"}
+                  </span>
+                </div>
+                <button onClick={() => setEditItem(book)} className="p-2 hover:bg-primary/10 rounded-xl">
+                  <Edit className="w-4 h-4 text-primary" />
+                </button>
+                <button onClick={() => deleteBook(book.id)} className="p-2 hover:bg-destructive/10 rounded-xl">
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+};
+
+/* ===== Book Form ===== */
+const BookForm = ({ book, onSave, onCancel }: { book?: Tables<"books"> | null; onSave: () => void; onCancel: () => void }) => {
+  const [form, setForm] = useState({
+    title: book?.title ?? "",
+    author: book?.author ?? "",
+    description: book?.description ?? "",
+    price: book?.price ?? "0$",
+    category: book?.category ?? "Général",
+    rating: book?.rating?.toString() ?? "0",
+    cover_url: book?.cover_url ?? "",
+    file_url: book?.file_url ?? "",
+    published: book?.published ?? false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const bookCategories = ["Histoire", "Politique", "Économie", "Culture", "Général"];
+
+  const uploadFile = async (file: File, folder: string) => {
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filePath = `${folder}/${fileName}`;
+    const { error } = await supabase.storage.from("article-media").upload(filePath, file, { cacheControl: "3600", upsert: false });
+    if (error) { toast.error("Erreur lors de l'envoi"); setUploading(false); return ""; }
+    const { data: urlData } = supabase.storage.from("article-media").getPublicUrl(filePath);
+    setUploading(false);
+    return urlData.publicUrl;
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await uploadFile(file, "book-covers");
+      if (url) setForm((f) => ({ ...f, cover_url: url }));
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await uploadFile(file, "book-files");
+      if (url) setForm((f) => ({ ...f, file_url: url }));
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.title || !form.author) { toast.error("Titre et auteur requis"); return; }
+    setSaving(true);
+    try {
+      const payload = { ...form, rating: parseFloat(form.rating) || 0 };
+      if (book) {
+        const { error } = await supabase.from("books").update(payload).eq("id", book.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("books").insert(payload);
+        if (error) throw error;
+      }
+      toast.success(book ? "Livre modifié !" : "Livre ajouté !");
+      onSave();
+    } catch (err: any) {
+      toast.error("Erreur : " + (err.message || "Erreur inconnue"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="px-4 pb-8 space-y-5">
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{book ? "Modifier le livre" : "Nouveau livre"}</h2>
+          <p className="text-xs text-muted-foreground">Remplissez les informations</p>
+        </div>
+        <button onClick={onCancel} className="p-2 rounded-xl hover:bg-secondary"><X className="w-5 h-5 text-muted-foreground" /></button>
+      </div>
+
+      <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Titre du livre" />
+      <ModernInput label="Auteur" value={form.author} onChange={(v) => setForm({ ...form, author: v })} placeholder="Nom de l'auteur" />
+      <ModernInput label="Description" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline placeholder="Description du livre" />
+      <ModernInput label="Prix" value={form.price} onChange={(v) => setForm({ ...form, price: v })} placeholder="Ex: 12.99$" />
+      <ModernInput label="Note (0-5)" value={form.rating} onChange={(v) => setForm({ ...form, rating: v })} placeholder="4.5" />
+
+      {/* Cover */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Couverture</label>
+        {form.cover_url ? (
+          <div className="relative mb-2">
+            <img src={form.cover_url} alt="Couverture" className="w-full max-h-48 object-cover rounded-2xl border border-border" />
+            <button onClick={() => setForm({ ...form, cover_url: "" })} className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => coverInputRef.current?.click()} className="w-full h-24 bg-card rounded-2xl border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-2 transition-all">
+            <Image className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Ajouter une couverture</span>
+          </button>
+        )}
+        <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+      </div>
+
+      {/* File PDF */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Fichier PDF</label>
+        {form.file_url ? (
+          <div className="flex items-center gap-2 p-3 bg-card rounded-2xl border border-border">
+            <FileText className="w-5 h-5 text-primary" />
+            <span className="text-xs text-foreground flex-1 truncate">{form.file_url.split("/").pop()}</span>
+            <button onClick={() => setForm({ ...form, file_url: "" })} className="p-1"><X className="w-4 h-4 text-muted-foreground" /></button>
+          </div>
+        ) : (
+          <button onClick={() => fileInputRef.current?.click()} className="w-full h-16 bg-card rounded-2xl border-2 border-dashed border-border hover:border-accent flex items-center justify-center gap-2 transition-all">
+            <FileText className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Ajouter un fichier PDF</span>
+          </button>
+        )}
+        <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
+      </div>
+
+      {uploading && (
+        <div className="flex items-center gap-2 py-4 justify-center text-sm text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" /> Envoi en cours...
+        </div>
+      )}
+
+      {/* Category */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Catégorie</label>
+        <div className="flex flex-wrap gap-2">
+          {bookCategories.map((c) => (
+            <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${form.category === c ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Card className="border-border/50 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.published ? "bg-green-500/10" : "bg-muted"}`}>
+              <Globe className={`w-5 h-5 ${form.published ? "text-green-600" : "text-muted-foreground"}`} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Publier</p>
+              <p className="text-xs text-muted-foreground">Visible dans la bibliothèque</p>
+            </div>
+          </div>
+          <Switch checked={form.published} onCheckedChange={(v) => setForm({ ...form, published: v })} />
+        </CardContent>
+      </Card>
+
+      <button onClick={handleSave} disabled={saving}
+        className="w-full h-12 bg-gradient-to-r from-primary to-[hsl(var(--brand-blue-light))] text-primary-foreground font-bold text-sm rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg">
+        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+        {book ? "Enregistrer" : "Ajouter le livre"}
+      </button>
+    </div>
+  );
+};
+
+/* ===== Explorer Panel ===== */
+const ExplorerPanel = () => {
+  const [items, setItems] = useState<Tables<"explorer_items">[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState<Tables<"explorer_items"> | null>(null);
+
+  const fetchItems = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("explorer_items").select("*").order("sort_order", { ascending: true });
+    setItems(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchItems(); }, []);
+
+  const deleteItem = async (id: string) => {
+    await supabase.from("explorer_items").delete().eq("id", id);
+    toast.success("Élément supprimé");
+    fetchItems();
+  };
+
+  if (showForm || editItem) {
+    return <ExplorerItemForm item={editItem} onSave={() => { setShowForm(false); setEditItem(null); fetchItems(); }} onCancel={() => { setShowForm(false); setEditItem(null); }} />;
+  }
+
+  return (
+    <div className="px-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Explorer la RDC</h2>
+          <p className="text-xs text-muted-foreground">{items.length} élément{items.length > 1 ? "s" : ""}</p>
+        </div>
+        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-accent to-[hsl(36,95%,58%)] text-primary-foreground text-xs font-bold rounded-xl shadow-md">
+          <Plus className="w-4 h-4" /> Ajouter
+        </button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : items.length === 0 ? (
+        <Card className="border-dashed border-2 border-border">
+          <CardContent className="py-12 text-center">
+            <Compass className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Aucun élément Explorer</p>
+          </CardContent>
+        </Card>
+      ) : (
+        items.map((item) => (
+          <Card key={item.id} className="border-border/50 shadow-sm overflow-hidden">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-6 h-6 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground line-clamp-1">{item.title}</p>
+                <p className="text-xs text-muted-foreground">{item.category} · Ordre: {item.sort_order}</p>
+                <span className={`text-[10px] font-bold ${item.published ? "text-green-600" : "text-muted-foreground"}`}>
+                  {item.published ? "✓ Publié" : "Brouillon"}
+                </span>
+              </div>
+              <button onClick={() => setEditItem(item)} className="p-2 hover:bg-accent/10 rounded-xl">
+                <Edit className="w-4 h-4 text-accent" />
+              </button>
+              <button onClick={() => deleteItem(item.id)} className="p-2 hover:bg-destructive/10 rounded-xl">
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </button>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+};
+
+/* ===== Explorer Item Form ===== */
+const ExplorerItemForm = ({ item, onSave, onCancel }: { item?: Tables<"explorer_items"> | null; onSave: () => void; onCancel: () => void }) => {
+  const [form, setForm] = useState({
+    title: item?.title ?? "",
+    description: item?.description ?? "",
+    category: item?.category ?? "Général",
+    icon: item?.icon ?? "MapPin",
+    content: item?.content ?? "",
+    image_url: item?.image_url ?? "",
+    sort_order: item?.sort_order?.toString() ?? "0",
+    published: item?.published ?? false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const explorerCategories = ["Histoire", "Géographie", "Culture", "Tourisme", "Général"];
+  const iconOptions = ["MapPin", "History", "Users", "Mountain"];
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const filePath = `explorer/${fileName}`;
+    const { error } = await supabase.storage.from("article-media").upload(filePath, file, { cacheControl: "3600", upsert: false });
+    if (error) { toast.error("Erreur lors de l'envoi"); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("article-media").getPublicUrl(filePath);
+    setForm((f) => ({ ...f, image_url: urlData.publicUrl }));
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    if (!form.title) { toast.error("Titre requis"); return; }
+    setSaving(true);
+    try {
+      const payload = { ...form, sort_order: parseInt(form.sort_order) || 0 };
+      if (item) {
+        const { error } = await supabase.from("explorer_items").update(payload).eq("id", item.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("explorer_items").insert(payload);
+        if (error) throw error;
+      }
+      toast.success(item ? "Modifié !" : "Ajouté !");
+      onSave();
+    } catch (err: any) {
+      toast.error("Erreur : " + (err.message || "Erreur inconnue"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="px-4 pb-8 space-y-5">
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{item ? "Modifier" : "Nouvel élément"}</h2>
+          <p className="text-xs text-muted-foreground">Section Explorer la RDC</p>
+        </div>
+        <button onClick={onCancel} className="p-2 rounded-xl hover:bg-secondary"><X className="w-5 h-5 text-muted-foreground" /></button>
+      </div>
+
+      <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Ex: Histoire de la RDC" />
+      <ModernInput label="Description courte" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline placeholder="Description affichée dans la liste" />
+
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Contenu détaillé</label>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <RichTextEditor content={form.content} onChange={(v) => setForm({ ...form, content: v })} />
+        </div>
+      </div>
+
+      <ModernInput label="Ordre d'affichage" value={form.sort_order} onChange={(v) => setForm({ ...form, sort_order: v })} placeholder="0" />
+
+      {/* Image */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Image</label>
+        {form.image_url ? (
+          <div className="relative mb-2">
+            <img src={form.image_url} alt="" className="w-full max-h-48 object-cover rounded-2xl border border-border" />
+            <button onClick={() => setForm({ ...form, image_url: "" })} className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => imageInputRef.current?.click()} className="w-full h-24 bg-card rounded-2xl border-2 border-dashed border-border hover:border-accent flex flex-col items-center justify-center gap-2 transition-all">
+            {uploading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Image className="w-5 h-5 text-muted-foreground" />}
+            <span className="text-xs text-muted-foreground">{uploading ? "Envoi..." : "Ajouter une image"}</span>
+          </button>
+        )}
+        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+      </div>
+
+      {/* Category */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Catégorie</label>
+        <div className="flex flex-wrap gap-2">
+          {explorerCategories.map((c) => (
+            <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${form.category === c ? "bg-accent text-accent-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Icon */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Icône</label>
+        <div className="flex flex-wrap gap-2">
+          {iconOptions.map((ic) => (
+            <button key={ic} type="button" onClick={() => setForm({ ...form, icon: ic })}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${form.icon === ic ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
+              {ic}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Card className="border-border/50 shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.published ? "bg-green-500/10" : "bg-muted"}`}>
+              <Globe className={`w-5 h-5 ${form.published ? "text-green-600" : "text-muted-foreground"}`} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Publier</p>
+              <p className="text-xs text-muted-foreground">Visible dans Explorer</p>
+            </div>
+          </div>
+          <Switch checked={form.published} onCheckedChange={(v) => setForm({ ...form, published: v })} />
+        </CardContent>
+      </Card>
+
+      <button onClick={handleSave} disabled={saving}
+        className="w-full h-12 bg-gradient-to-r from-accent to-[hsl(36,95%,58%)] text-primary-foreground font-bold text-sm rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg">
+        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+        {item ? "Enregistrer" : "Ajouter"}
       </button>
     </div>
   );

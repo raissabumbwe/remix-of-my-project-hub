@@ -1,14 +1,33 @@
 import { motion } from "framer-motion";
-import { Star, Download, BookOpen, Moon, Headphones, ChevronLeft } from "lucide-react";
-import { books } from "@/data/mock-data";
-import { useState } from "react";
+import { Star, Download, BookOpen, Moon, Headphones, ChevronLeft, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import libraryBg from "@/assets/library-bg.jpg";
 
-const bookCategories = ["Tous", "Histoire", "Politique", "Économie", "Culture"];
+type Book = Tables<"books">;
+
+const bookCategories = ["Tous", "Histoire", "Politique", "Économie", "Culture", "Général"];
 
 const LibraryPage = () => {
   const [activeCategory, setActiveCategory] = useState("Tous");
-  const [selectedBook, setSelectedBook] = useState<(typeof books)[0] | null>(null);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("books")
+        .select("*")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+      setBooks(data ?? []);
+      setLoading(false);
+    };
+    fetchBooks();
+  }, []);
 
   const filtered =
     activeCategory === "Tous"
@@ -29,9 +48,17 @@ const LibraryPage = () => {
           <h1 className="text-sm font-semibold text-foreground">Détail du livre</h1>
         </div>
         <div className="px-6 text-center pb-6">
-          <div className="w-32 h-44 mx-auto rounded-xl bg-brand-gradient flex items-center justify-center text-5xl mb-5 shadow-elevated">
-            {selectedBook.cover}
-          </div>
+          {selectedBook.cover_url ? (
+            <img
+              src={selectedBook.cover_url}
+              alt={selectedBook.title}
+              className="w-32 h-44 mx-auto rounded-xl object-cover mb-5 shadow-lg"
+            />
+          ) : (
+            <div className="w-32 h-44 mx-auto rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-5xl mb-5 shadow-lg">
+              📘
+            </div>
+          )}
           <h2 className="font-display text-xl font-bold text-foreground">{selectedBook.title}</h2>
           <p className="text-sm text-muted-foreground mt-1">{selectedBook.author}</p>
           <div className="flex items-center justify-center gap-1 mt-2">
@@ -39,28 +66,31 @@ const LibraryPage = () => {
               <Star
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(selectedBook.rating) ? "text-accent fill-accent" : "text-muted"
+                  i < Math.floor(Number(selectedBook.rating)) ? "text-accent fill-accent" : "text-muted"
                 }`}
               />
             ))}
-            <span className="text-xs text-muted-foreground ml-1">{selectedBook.rating}</span>
+            <span className="text-xs text-muted-foreground ml-1">{Number(selectedBook.rating).toFixed(1)}</span>
           </div>
           <p className="text-sm text-foreground/70 mt-4">{selectedBook.description}</p>
         </div>
 
-        {/* Purchase options */}
         <div className="px-4 space-y-3">
           <h3 className="text-sm font-bold text-foreground">Options d'accès</h3>
           <button className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-card">
             Acheter — {selectedBook.price}
           </button>
-          <button className="w-full py-3.5 rounded-xl bg-accent text-accent-foreground font-bold text-sm shadow-card">
-            Abonnement illimité — 4.99$/mois
-          </button>
+          {selectedBook.file_url && (
+            <a
+              href={selectedBook.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium"
+            >
+              <Download className="w-4 h-4" /> Télécharger PDF
+            </a>
+          )}
           <div className="flex gap-2 mt-2">
-            <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium">
-              <Download className="w-4 h-4" /> PDF
-            </button>
             <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium">
               <BookOpen className="w-4 h-4" /> Lire en ligne
             </button>
@@ -89,7 +119,6 @@ const LibraryPage = () => {
 
   return (
     <div className="pb-20">
-      {/* Hero */}
       <div className="relative h-40 overflow-hidden">
         <img src={libraryBg} alt="Bibliothèque" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-hero-gradient" />
@@ -103,7 +132,6 @@ const LibraryPage = () => {
         </div>
       </div>
 
-      {/* Categories */}
       <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
         {bookCategories.map((cat) => (
           <button
@@ -120,37 +148,53 @@ const LibraryPage = () => {
         ))}
       </div>
 
-      {/* Book grid */}
-      <div className="px-4">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Livres populaires
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {filtered.map((book) => (
-            <motion.button
-              key={book.id}
-              onClick={() => setSelectedBook(book)}
-              className="bg-card rounded-xl overflow-hidden shadow-card text-left"
-              whileTap={{ scale: 0.97 }}
-            >
-              <div className="h-32 bg-brand-gradient flex items-center justify-center text-4xl">
-                {book.cover}
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-bold text-foreground line-clamp-2">{book.title}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{book.author}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs font-bold text-primary">{book.price}</span>
-                  <div className="flex items-center gap-0.5">
-                    <Star className="w-3 h-3 text-accent fill-accent" />
-                    <span className="text-[10px] text-muted-foreground">{book.rating}</span>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <span className="text-4xl mb-3">📚</span>
+          <p className="text-sm text-muted-foreground text-center">
+            Aucun livre disponible pour le moment
+          </p>
+        </div>
+      ) : (
+        <div className="px-4">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Livres populaires
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((book) => (
+              <motion.button
+                key={book.id}
+                onClick={() => setSelectedBook(book)}
+                className="bg-card rounded-xl overflow-hidden shadow-card text-left"
+                whileTap={{ scale: 0.97 }}
+              >
+                {book.cover_url ? (
+                  <img src={book.cover_url} alt={book.title} className="h-32 w-full object-cover" />
+                ) : (
+                  <div className="h-32 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-4xl">
+                    📘
+                  </div>
+                )}
+                <div className="p-3">
+                  <p className="text-xs font-bold text-foreground line-clamp-2">{book.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{book.author}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs font-bold text-primary">{book.price}</span>
+                    <div className="flex items-center gap-0.5">
+                      <Star className="w-3 h-3 text-accent fill-accent" />
+                      <span className="text-[10px] text-muted-foreground">{Number(book.rating).toFixed(1)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.button>
-          ))}
+              </motion.button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
