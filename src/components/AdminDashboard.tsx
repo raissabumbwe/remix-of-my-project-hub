@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, Plus, Edit, Trash2, Tv, Radio, FileText,
   BarChart3, Users, Eye, LogOut, Loader2, Save, X, Camera, Image, Video, Play,
-  TrendingUp, Activity, Globe, Clock, Heart, MessageCircle, Zap, Shield
+  TrendingUp, Activity, Globe, Clock, Heart, MessageCircle, Zap, Shield,
+  BookOpen, MapPin, Compass
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 
-type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users";
+type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users" | "library" | "explorer";
 
 interface AdminDashboardProps {
   onBack: () => void;
