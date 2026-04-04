@@ -381,10 +381,10 @@ const HomePage = () => {
                   <img
                     src={latestFive[slideIndex].image_url!}
                     alt={latestFive[slideIndex].title}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-64 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-48 bg-secondary flex items-center justify-center">
+                  <div className="w-full h-64 bg-secondary flex items-center justify-center">
                     <span className="text-5xl">📰</span>
                   </div>
                 )}
