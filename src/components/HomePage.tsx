@@ -363,6 +363,23 @@ const HomePage = () => {
 
   return (
     <div className="pb-20">
+      {/* Category pills - above slider */}
+      <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+              activeCategory === cat
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* Hero Slider - 5 derniers articles */}
       {!loading && latestFive.length > 0 && (
         <div className="relative mb-4">
@@ -381,10 +398,10 @@ const HomePage = () => {
                   <img
                     src={latestFive[slideIndex].image_url!}
                     alt={latestFive[slideIndex].title}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-72 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-64 bg-secondary flex items-center justify-center">
+                  <div className="w-full h-72 bg-secondary flex items-center justify-center">
                     <span className="text-5xl">📰</span>
                   </div>
                 )}
@@ -434,23 +451,6 @@ const HomePage = () => {
           </div>
         </div>
       )}
-
-      {/* Category pills */}
-      <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-              activeCategory === cat
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
