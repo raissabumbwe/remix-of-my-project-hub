@@ -116,6 +116,8 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             {activeTab === "live" && <LivePanel />}
             {activeTab === "tv" && <TVPanel />}
             {activeTab === "radio" && <RadioPanel />}
+            {activeTab === "library" && <LibraryPanel />}
+            {activeTab === "explorer" && <ExplorerPanel />}
           </motion.div>
         </AnimatePresence>
       </div>
