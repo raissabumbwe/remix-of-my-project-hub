@@ -70,7 +70,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
 
       {/* Tab bar floating over header */}
       <div className="-mt-10 mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10">
-        <div className="flex">
+        <div className="flex overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
