@@ -37,7 +37,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
     { id: "live" as const, label: "Live", icon: Play },
     { id: "tv" as const, label: "TV", icon: Tv },
     { id: "radio" as const, label: "Radio", icon: Radio },
-    { id: "library" as const, label: "Livres", icon: BookOpen },
+    { id: "library" as const, label: "Bibliothèque", icon: BookOpen },
     { id: "explorer" as const, label: "Explorer", icon: Compass },
   ];
 
@@ -69,7 +69,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       </div>
 
       {/* Tab bar floating over header */}
-      <div className="-mt-10 mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10">
+      <div className="-mt-10 mx-2 sm:mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10">
         <div className="flex overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -78,20 +78,20 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-all relative ${
+                className={`min-w-[56px] flex-shrink-0 flex flex-col items-center gap-0.5 py-2.5 px-1.5 text-[9px] sm:text-[10px] font-semibold transition-all relative ${
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <div className={`p-1.5 rounded-xl transition-all ${isActive ? "bg-primary/10" : ""}`}>
+                <div className={`p-1 rounded-lg transition-all ${isActive ? "bg-primary/10" : ""}`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                {tab.label}
+                <span className="truncate max-w-[52px]">{tab.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="admin-tab-indicator"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                    className="absolute bottom-0 left-1.5 right-1.5 h-0.5 bg-primary rounded-full"
                   />
                 )}
               </button>
