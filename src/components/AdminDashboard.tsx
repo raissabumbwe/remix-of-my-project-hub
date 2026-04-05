@@ -1508,9 +1508,36 @@ const ExplorerItemForm = ({ item, onSave, onCancel }: { item?: Tables<"explorer_
         <button onClick={onCancel} className="p-2 rounded-xl hover:bg-secondary"><X className="w-5 h-5 text-muted-foreground" /></button>
       </div>
 
-      <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Ex: Histoire de la RDC" />
-      <ModernInput label="Description courte" value={form.description} onChange={(v) => setForm({ ...form, description: v })} multiline placeholder="Description affichée dans la liste" />
+      {/* Image - prominent position */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Image de couverture</label>
+        {form.image_url ? (
+          <div className="relative mb-2">
+            <img src={form.image_url} alt="" className="w-full max-h-56 object-cover rounded-2xl border border-border" />
+            <button onClick={() => setForm({ ...form, image_url: "" })} className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => imageInputRef.current?.click()} className="w-full h-32 bg-card rounded-2xl border-2 border-dashed border-border hover:border-accent flex flex-col items-center justify-center gap-2 transition-all">
+            {uploading ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Camera className="w-6 h-6 text-muted-foreground" />}
+            <span className="text-xs text-muted-foreground">{uploading ? "Envoi..." : "Ajouter une image"}</span>
+          </button>
+        )}
+        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+      </div>
 
+      <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Ex: Histoire de la RDC" />
+
+      {/* Description with rich text editor */}
+      <div>
+        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Description courte</label>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <RichTextEditor content={form.description} onChange={(v) => setForm({ ...form, description: v })} />
+        </div>
+      </div>
+
+      {/* Content with rich text editor */}
       <div>
         <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Contenu détaillé</label>
         <div className="rounded-xl border border-border overflow-hidden">
@@ -1518,38 +1545,20 @@ const ExplorerItemForm = ({ item, onSave, onCancel }: { item?: Tables<"explorer_
         </div>
       </div>
 
-      <ModernInput label="Ordre d'affichage" value={form.sort_order} onChange={(v) => setForm({ ...form, sort_order: v })} placeholder="0" />
-
-      {/* Image */}
-      <div>
-        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Image</label>
-        {form.image_url ? (
-          <div className="relative mb-2">
-            <img src={form.image_url} alt="" className="w-full max-h-48 object-cover rounded-2xl border border-border" />
-            <button onClick={() => setForm({ ...form, image_url: "" })} className="absolute top-2 right-2 w-8 h-8 bg-background/80 backdrop-blur rounded-full flex items-center justify-center">
-              <X className="w-4 h-4" />
-            </button>
+      {/* Category & Sort order row */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2">
+          <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Catégorie</label>
+          <div className="flex flex-wrap gap-2">
+            {explorerCategories.map((c) => (
+              <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${form.category === c ? "bg-accent text-accent-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
+                {c}
+              </button>
+            ))}
           </div>
-        ) : (
-          <button onClick={() => imageInputRef.current?.click()} className="w-full h-24 bg-card rounded-2xl border-2 border-dashed border-border hover:border-accent flex flex-col items-center justify-center gap-2 transition-all">
-            {uploading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Image className="w-5 h-5 text-muted-foreground" />}
-            <span className="text-xs text-muted-foreground">{uploading ? "Envoi..." : "Ajouter une image"}</span>
-          </button>
-        )}
-        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      </div>
-
-      {/* Category */}
-      <div>
-        <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Catégorie</label>
-        <div className="flex flex-wrap gap-2">
-          {explorerCategories.map((c) => (
-            <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${form.category === c ? "bg-accent text-accent-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
-              {c}
-            </button>
-          ))}
         </div>
+        <ModernInput label="Ordre" value={form.sort_order} onChange={(v) => setForm({ ...form, sort_order: v })} placeholder="0" />
       </div>
 
       {/* Icon */}
