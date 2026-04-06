@@ -322,6 +322,13 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
   const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
+    if (initialCategory) {
+      setActiveCategory(initialCategory);
+      onCategoryReset?.();
+    }
+  }, [initialCategory]);
+
+  useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
       const { data } = await supabase
