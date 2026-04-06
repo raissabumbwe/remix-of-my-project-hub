@@ -21,6 +21,7 @@ const Index = () => {
   });
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const { isAdmin, user, loading } = useAuth();
@@ -67,7 +68,7 @@ const Index = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <HomePage />;
+        return <HomePage initialCategory={selectedCategory} onCategoryReset={() => setSelectedCategory(null)} />;
       case "live-tv":
         return <LiveTVPage />;
       case "fm-live":
@@ -105,6 +106,7 @@ const Index = () => {
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
             onCategorySelect={(cat) => {
+              setSelectedCategory(cat);
               setActiveTab("home");
             }}
           />
