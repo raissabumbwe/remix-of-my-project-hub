@@ -106,6 +106,7 @@ const Index = () => {
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
             onCategorySelect={(cat) => {
+              setSelectedCategory(cat);
               setActiveTab("home");
             }}
           />
