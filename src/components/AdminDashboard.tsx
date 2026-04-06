@@ -69,7 +69,7 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
       </div>
 
       {/* Tab bar floating over header */}
-      <div className="-mt-10 mx-2 sm:mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10">
+      <div className="-mt-10 mx-2 sm:mx-3 bg-card rounded-2xl shadow-lg border border-border/50 overflow-hidden z-10 relative">
         <div className="flex overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -97,6 +97,15 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
               </button>
             );
           })}
+        </div>
+        {/* Scroll hint gradient + arrow */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent pointer-events-none flex items-center justify-end pr-1 sm:hidden">
+          <motion.div
+            animate={{ x: [0, 4, 0] }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+          </motion.div>
         </div>
       </div>
 
