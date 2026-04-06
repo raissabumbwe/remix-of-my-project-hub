@@ -93,14 +93,6 @@ const ExplorerPage = () => {
       <div className="relative h-52 overflow-hidden">
         <img src={heroRdc} alt="RDC" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-hero-gradient" />
-        <div className="absolute bottom-4 left-4 right-4 text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-foreground">
-            Explorer la RDC
-          </h1>
-          <p className="text-primary-foreground/70 text-sm mt-1">
-            Cœur de l'Afrique
-          </p>
-        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 px-4 -mt-4 relative z-10">
