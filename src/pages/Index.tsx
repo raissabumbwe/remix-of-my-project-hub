@@ -68,7 +68,7 @@ const Index = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "home":
-        return <HomePage />;
+        return <HomePage initialCategory={selectedCategory} onCategoryReset={() => setSelectedCategory(null)} />;
       case "live-tv":
         return <LiveTVPage />;
       case "fm-live":
