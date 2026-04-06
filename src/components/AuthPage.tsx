@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo-infoslight.png";
+import logo from "@/assets/logo-infoslight_3.png";
 import { toast } from "sonner";
 
 interface AuthPageProps {
