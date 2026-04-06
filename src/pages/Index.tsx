@@ -21,6 +21,7 @@ const Index = () => {
   });
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const { isAdmin, user, loading } = useAuth();
