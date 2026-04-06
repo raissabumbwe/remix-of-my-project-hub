@@ -314,8 +314,8 @@ const ArticleDetail = ({
   );
 };
 
-const HomePage = () => {
-  const [activeCategory, setActiveCategory] = useState("À la Une");
+const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: string | null; onCategoryReset?: () => void }) => {
+  const [activeCategory, setActiveCategory] = useState(initialCategory || "À la Une");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
