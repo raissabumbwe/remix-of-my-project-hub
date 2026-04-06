@@ -98,6 +98,15 @@ const AdminDashboard = ({ onBack }: AdminDashboardProps) => {
             );
           })}
         </div>
+        {/* Scroll hint gradient + arrow */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent pointer-events-none flex items-center justify-end pr-1 sm:hidden">
+          <motion.div
+            animate={{ x: [0, 4, 0] }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground rotate-180" />
+          </motion.div>
+        </div>
       </div>
 
       {/* Content */}
