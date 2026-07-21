@@ -38,7 +38,7 @@ const ArticleCard = ({
         {article.image_url ? (
           <img
             src={article.image_url}
-            alt={article.title}
+            alt={article.title.replace(/<[^>]*>/g, "")}
             className="w-full h-52 object-cover"
           />
         ) : (
@@ -51,9 +51,10 @@ const ArticleCard = ({
           <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-2">
             {article.category}
           </span>
-          <h2 className="text-primary-foreground font-display text-lg font-bold leading-snug line-clamp-2">
-            {article.title}
-          </h2>
+          <div
+            className="text-primary-foreground font-display text-lg font-bold leading-snug line-clamp-2 rich-inline"
+            dangerouslySetInnerHTML={{ __html: article.title }}
+          />
           <p className="text-primary-foreground/70 text-xs mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
           </p>
@@ -71,7 +72,7 @@ const ArticleCard = ({
       {article.image_url ? (
         <img
           src={article.image_url}
-          alt={article.title}
+          alt={article.title.replace(/<[^>]*>/g, "")}
           className="w-24 h-20 rounded-lg object-cover flex-shrink-0"
           loading="lazy"
         />
@@ -84,9 +85,10 @@ const ArticleCard = ({
         <span className="text-[10px] font-bold text-primary uppercase">
           {article.category}
         </span>
-        <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug">
-          {article.title}
-        </h3>
+        <div
+          className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug rich-inline"
+          dangerouslySetInnerHTML={{ __html: article.title }}
+        />
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
         </p>
