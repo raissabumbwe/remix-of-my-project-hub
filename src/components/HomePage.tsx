@@ -155,7 +155,7 @@ const ArticleDetail = ({
 
   const shareArticle = (platform: string) => {
     const url = window.location.origin + "/?article=" + article.id;
-    const text = article.title;
+    const text = article.title.replace(/<[^>]*>/g, "");
     const links: Record<string, string> = {
       Facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
       WhatsApp: `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`,
