@@ -408,7 +408,7 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                 {latestFive[slideIndex]?.image_url ? (
                   <img
                     src={latestFive[slideIndex].image_url!}
-                    alt={latestFive[slideIndex].title}
+                    alt={latestFive[slideIndex].title.replace(/<[^>]*>/g, "")}
                     className="w-full h-72 object-cover"
                   />
                 ) : (
@@ -421,9 +421,10 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                   <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-1.5">
                     {latestFive[slideIndex].category}
                   </span>
-                  <h2 className="text-white font-display text-base font-bold leading-snug line-clamp-2">
-                    {latestFive[slideIndex].title}
-                  </h2>
+                  <div
+                    className="text-white font-display text-base font-bold leading-snug line-clamp-2 rich-inline"
+                    dangerouslySetInnerHTML={{ __html: latestFive[slideIndex].title }}
+                  />
                   <p className="text-white/70 text-xs mt-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {timeAgo(latestFive[slideIndex].created_at)}
                   </p>
