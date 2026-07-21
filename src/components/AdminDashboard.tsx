@@ -600,8 +600,20 @@ const ArticleForm = ({
       </div>
 
       <div className="space-y-4">
-        <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Titre de l'article" />
-        <ModernInput label="Résumé" value={form.summary} onChange={(v) => setForm({ ...form, summary: v })} multiline placeholder="Résumé court de l'article" />
+        <div>
+          <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Titre</label>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <RichTextEditor content={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">Astuce : choisissez la police, la taille et la couleur du titre.</p>
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Résumé</label>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <RichTextEditor content={form.summary} onChange={(v) => setForm({ ...form, summary: v })} />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">Le résumé aussi peut être mis en forme (police, taille, couleur).</p>
+        </div>
         
         <div>
           <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Contenu</label>
