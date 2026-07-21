@@ -181,7 +181,7 @@ const ArticleDetail = ({
     >
       <div className="relative">
         {article.image_url ? (
-          <img src={article.image_url} alt={article.title} className="w-full h-56 object-cover" />
+          <img src={article.image_url} alt={article.title.replace(/<[^>]*>/g, "")} className="w-full h-56 object-cover" />
         ) : (
           <div className="w-full h-56 bg-secondary" />
         )}
@@ -198,17 +198,19 @@ const ArticleDetail = ({
         <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3">
           {article.category}
         </span>
-        <h1 className="font-display text-2xl font-bold text-foreground leading-tight mb-3">
-          {article.title}
-        </h1>
+        <div
+          className="font-display text-2xl font-bold text-foreground leading-tight mb-3 rich-inline"
+          dangerouslySetInnerHTML={{ __html: article.title }}
+        />
         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5">
           <span>{article.author}</span>
           <span>•</span>
           <span>{timeAgo(article.created_at)}</span>
         </div>
-        <p className="text-foreground/80 text-sm leading-relaxed mb-4">
-          {article.summary}
-        </p>
+        <div
+          className="prose prose-sm max-w-none text-foreground/80 text-sm leading-relaxed mb-4"
+          dangerouslySetInnerHTML={{ __html: article.summary }}
+        />
         {article.content && (
           <div
             className="prose prose-sm max-w-none text-foreground/80 leading-relaxed mb-6"
