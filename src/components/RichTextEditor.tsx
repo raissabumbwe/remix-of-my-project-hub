@@ -7,12 +7,15 @@ import Link from "@tiptap/extension-link";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
-import { useState } from "react";
+import Image from "@tiptap/extension-image";
+import { useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Heading1, Heading2, Quote, Highlighter, Link as LinkIcon, Undo, Redo,
-  Type, Palette, ChevronDown,
+  Type, Palette, ChevronDown, ImageIcon,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -93,6 +96,8 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -104,6 +109,11 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
       FontSizeExtension,
       Color,
       FontFamily,
+      Image.configure({
+        HTMLAttributes: {
+          class: "rounded-lg my-3 max-w-full h-auto",
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -137,6 +147,29 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const setColor = (color: string) => {
     editor.chain().focus().setColor(color).run();
     setShowColorPicker(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("article-media").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("article-media").getPublicUrl(path);
+      editor.chain().focus().setImage({ src: data.publicUrl }).run();
+      toast.success("Image ajoutée");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'upload");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -287,6 +320,19 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
         <MenuButton onClick={addLink} active={editor.isActive("link")} title="Lien">
           <LinkIcon className="w-4 h-4" />
         </MenuButton>
+        <MenuButton
+          onClick={() => fileInputRef.current?.click()}
+          title="Insérer une image"
+        >
+          <ImageIcon className={`w-4 h-4 ${uploading ? "animate-pulse" : ""}`} />
+        </MenuButton>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
 
         <div className="w-px bg-border mx-1 h-6" />
 
