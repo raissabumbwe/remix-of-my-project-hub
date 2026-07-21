@@ -38,7 +38,7 @@ const ArticleCard = ({
         {article.image_url ? (
           <img
             src={article.image_url}
-            alt={article.title}
+            alt={article.title.replace(/<[^>]*>/g, "")}
             className="w-full h-52 object-cover"
           />
         ) : (
@@ -51,9 +51,10 @@ const ArticleCard = ({
           <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-2">
             {article.category}
           </span>
-          <h2 className="text-primary-foreground font-display text-lg font-bold leading-snug line-clamp-2">
-            {article.title}
-          </h2>
+          <div
+            className="text-primary-foreground font-display text-lg font-bold leading-snug line-clamp-2 rich-inline"
+            dangerouslySetInnerHTML={{ __html: article.title }}
+          />
           <p className="text-primary-foreground/70 text-xs mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
           </p>
@@ -71,7 +72,7 @@ const ArticleCard = ({
       {article.image_url ? (
         <img
           src={article.image_url}
-          alt={article.title}
+          alt={article.title.replace(/<[^>]*>/g, "")}
           className="w-24 h-20 rounded-lg object-cover flex-shrink-0"
           loading="lazy"
         />
@@ -84,9 +85,10 @@ const ArticleCard = ({
         <span className="text-[10px] font-bold text-primary uppercase">
           {article.category}
         </span>
-        <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug">
-          {article.title}
-        </h3>
+        <div
+          className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug rich-inline"
+          dangerouslySetInnerHTML={{ __html: article.title }}
+        />
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
         </p>
@@ -155,7 +157,7 @@ const ArticleDetail = ({
 
   const shareArticle = (platform: string) => {
     const url = window.location.origin + "/?article=" + article.id;
-    const text = article.title;
+    const text = article.title.replace(/<[^>]*>/g, "");
     const links: Record<string, string> = {
       Facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
       WhatsApp: `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`,
@@ -179,7 +181,7 @@ const ArticleDetail = ({
     >
       <div className="relative">
         {article.image_url ? (
-          <img src={article.image_url} alt={article.title} className="w-full h-56 object-cover" />
+          <img src={article.image_url} alt={article.title.replace(/<[^>]*>/g, "")} className="w-full h-56 object-cover" />
         ) : (
           <div className="w-full h-56 bg-secondary" />
         )}
@@ -196,17 +198,19 @@ const ArticleDetail = ({
         <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3">
           {article.category}
         </span>
-        <h1 className="font-display text-2xl font-bold text-foreground leading-tight mb-3">
-          {article.title}
-        </h1>
+        <div
+          className="font-display text-2xl font-bold text-foreground leading-tight mb-3 rich-inline"
+          dangerouslySetInnerHTML={{ __html: article.title }}
+        />
         <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5">
           <span>{article.author}</span>
           <span>•</span>
           <span>{timeAgo(article.created_at)}</span>
         </div>
-        <p className="text-foreground/80 text-sm leading-relaxed mb-4">
-          {article.summary}
-        </p>
+        <div
+          className="prose prose-sm max-w-none text-foreground/80 text-sm leading-relaxed mb-4"
+          dangerouslySetInnerHTML={{ __html: article.summary }}
+        />
         {article.content && (
           <div
             className="prose prose-sm max-w-none text-foreground/80 leading-relaxed mb-6"
@@ -404,7 +408,7 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                 {latestFive[slideIndex]?.image_url ? (
                   <img
                     src={latestFive[slideIndex].image_url!}
-                    alt={latestFive[slideIndex].title}
+                    alt={latestFive[slideIndex].title.replace(/<[^>]*>/g, "")}
                     className="w-full h-72 object-cover"
                   />
                 ) : (
@@ -417,9 +421,10 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                   <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-1.5">
                     {latestFive[slideIndex].category}
                   </span>
-                  <h2 className="text-white font-display text-base font-bold leading-snug line-clamp-2">
-                    {latestFive[slideIndex].title}
-                  </h2>
+                  <div
+                    className="text-white font-display text-base font-bold leading-snug line-clamp-2 rich-inline"
+                    dangerouslySetInnerHTML={{ __html: latestFive[slideIndex].title }}
+                  />
                   <p className="text-white/70 text-xs mt-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {timeAgo(latestFive[slideIndex].created_at)}
                   </p>

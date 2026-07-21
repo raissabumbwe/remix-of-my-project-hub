@@ -545,7 +545,8 @@ const ArticleForm = ({
   const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
 
   const handleSave = async () => {
-    if (!form.title || !form.summary || !form.author) {
+    const stripHtml = (h: string) => h.replace(/<[^>]*>/g, "").trim();
+    if (!stripHtml(form.title) || !stripHtml(form.summary) || !form.author) {
       toast.error("Veuillez remplir le titre, le résumé et l'auteur");
       return;
     }
@@ -564,8 +565,8 @@ const ArticleForm = ({
         try {
           await supabase.functions.invoke("send-push-notification", {
             body: {
-              title: `📰 ${form.title}`,
-              body: form.summary,
+              title: `📰 ${stripHtml(form.title)}`,
+              body: stripHtml(form.summary),
             },
           });
           toast.success("Notification push envoyée !");
@@ -599,8 +600,20 @@ const ArticleForm = ({
       </div>
 
       <div className="space-y-4">
-        <ModernInput label="Titre" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Titre de l'article" />
-        <ModernInput label="Résumé" value={form.summary} onChange={(v) => setForm({ ...form, summary: v })} multiline placeholder="Résumé court de l'article" />
+        <div>
+          <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Titre</label>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <RichTextEditor content={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">Astuce : choisissez la police, la taille et la couleur du titre.</p>
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Résumé</label>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <RichTextEditor content={form.summary} onChange={(v) => setForm({ ...form, summary: v })} />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">Le résumé aussi peut être mis en forme (police, taille, couleur).</p>
+        </div>
         
         <div>
           <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wide">Contenu</label>
