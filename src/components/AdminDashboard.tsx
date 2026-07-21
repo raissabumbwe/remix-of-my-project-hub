@@ -545,7 +545,8 @@ const ArticleForm = ({
   const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
 
   const handleSave = async () => {
-    if (!form.title || !form.summary || !form.author) {
+    const stripHtml = (h: string) => h.replace(/<[^>]*>/g, "").trim();
+    if (!stripHtml(form.title) || !stripHtml(form.summary) || !form.author) {
       toast.error("Veuillez remplir le titre, le résumé et l'auteur");
       return;
     }
@@ -564,8 +565,8 @@ const ArticleForm = ({
         try {
           await supabase.functions.invoke("send-push-notification", {
             body: {
-              title: `📰 ${form.title}`,
-              body: form.summary,
+              title: `📰 ${stripHtml(form.title)}`,
+              body: stripHtml(form.summary),
             },
           });
           toast.success("Notification push envoyée !");
