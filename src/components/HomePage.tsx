@@ -333,18 +333,50 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
   }, [initialCategory]);
 
   useEffect(() => {
+    let mounted = true;
     const fetchArticles = async () => {
-      setLoading(true);
       const { data } = await supabase
         .from("articles")
         .select("*")
         .eq("published", true)
         .order("created_at", { ascending: false });
+      if (!mounted) return;
       setArticles(data ?? []);
       setLoading(false);
     };
     fetchArticles();
+
+    // Refetch when tab regains focus
+    const onFocus = () => fetchArticles();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
+    // Realtime updates
+    const channel = supabase
+      .channel("articles-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "articles" },
+        () => fetchArticles()
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Keep the currently opened article in sync with fresh data
+  useEffect(() => {
+    if (!selectedArticle) return;
+    const fresh = articles.find((a) => a.id === selectedArticle.id);
+    if (fresh && fresh !== selectedArticle) {
+      setSelectedArticle(fresh);
+    }
+  }, [articles]);
 
   const latestFive = articles.slice(0, 5);
 
