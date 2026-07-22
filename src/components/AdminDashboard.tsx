@@ -17,6 +17,8 @@ import { Switch } from "@/components/ui/switch";
 
 type AdminTab = "stats" | "articles" | "tv" | "radio" | "live" | "users" | "library" | "explorer";
 
+const stripHtml = (h: string) => (h ?? "").replace(/<[^>]*>/g, "").trim();
+
 interface AdminDashboardProps {
   onBack: () => void;
 }
