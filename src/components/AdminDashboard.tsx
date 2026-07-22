@@ -453,7 +453,7 @@ const ArticlesPanel = () => {
                 )}
                 <div className="flex-1 p-3 flex items-center gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground line-clamp-1">{article.title}</p>
+                    <p className="text-sm font-semibold text-foreground line-clamp-1">{stripHtml(article.title)}</p>
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                         {article.category}
