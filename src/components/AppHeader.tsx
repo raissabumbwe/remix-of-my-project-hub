@@ -14,11 +14,11 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 bg-[hsl(0,100%,50%)] backdrop-blur-lg border-b-2 border-[hsl(0,100%,45%)] safe-top">
-      <div className="flex items-center h-14 px-4 gap-3">
+    <header className="sticky top-0 z-30 bg-[hsl(0,100%,50%)] backdrop-blur-lg border-b border-[hsl(0,100%,45%)] safe-top">
+      <div className="flex items-center h-12 px-3 gap-2">
         <button
           onClick={onMenuOpen}
-           className="p-2 -ml-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           className="p-1.5 -ml-1.5 rounded-lg hover:bg-destructive/80 transition-colors"
            aria-label="Menu"
          >
            <Menu className="w-5 h-5 text-destructive-foreground" />
@@ -27,7 +27,7 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
         <img
           src={logo}
           alt="Infoslight.cd"
-          className="h-11 object-contain cursor-pointer"
+          className="h-9 object-contain cursor-pointer"
           onDoubleClick={onLogoDoubleClick}
         />
 
@@ -56,18 +56,18 @@ const AppHeader = ({ onMenuOpen, onLogoDoubleClick }: AppHeaderProps) => {
 
          <button
            onClick={() => setSearchOpen(true)}
-           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors"
+           className="p-1.5 rounded-lg hover:bg-destructive/80 transition-colors"
            aria-label="Rechercher"
          >
            <Search className="w-5 h-5 text-destructive-foreground" />
         </button>
 
          <button
-           className="p-2 rounded-lg hover:bg-destructive/80 transition-colors relative"
+           className="p-1.5 rounded-lg hover:bg-destructive/80 transition-colors relative"
            aria-label="Notifications"
          >
            <Bell className="w-5 h-5 text-destructive-foreground" />
-           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-foreground rounded-full" />
+           <span className="absolute top-1 right-1 w-2 h-2 bg-primary-foreground rounded-full" />
         </button>
       </div>
     </header>
