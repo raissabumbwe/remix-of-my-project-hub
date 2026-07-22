@@ -8,6 +8,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
 import Image from "@tiptap/extension-image";
+import { Node, mergeAttributes } from "@tiptap/core";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +16,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Heading1, Heading2, Quote, Highlighter, Link as LinkIcon, Undo, Redo,
-  Type, Palette, ChevronDown, ImageIcon,
+  Type, Palette, ChevronDown, ImageIcon, Video as VideoIcon,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -92,12 +93,53 @@ const FontSizeExtension = TextStyle.extend({
   },
 });
 
+const VideoExtension = Node.create({
+  name: "video",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      controls: { default: true },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "video" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "video",
+      mergeAttributes(HTMLAttributes, {
+        controls: "true",
+        playsinline: "true",
+        preload: "metadata",
+        class: "rounded-lg my-3 max-w-full h-auto w-full",
+      }),
+    ];
+  },
+  addCommands() {
+    return {
+      setVideo:
+        (options: { src: string }) =>
+        ({ commands }: any) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: options,
+          });
+        },
+    } as any;
+  },
+});
+
 const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -114,6 +156,7 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
           class: "rounded-lg my-3 max-w-full h-auto",
         },
       }),
+      VideoExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -169,6 +212,30 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingVideo(true);
+      const ext = file.name.split(".").pop();
+      const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("article-media").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("article-media").getPublicUrl(path);
+      (editor.chain().focus() as any).setVideo({ src: data.publicUrl }).run();
+      toast.success("Vidéo ajoutée");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'upload");
+    } finally {
+      setUploadingVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
     }
   };
 
@@ -332,6 +399,19 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
           accept="image/*"
           className="hidden"
           onChange={handleImageUpload}
+        />
+        <MenuButton
+          onClick={() => videoInputRef.current?.click()}
+          title="Insérer une vidéo"
+        >
+          <VideoIcon className={`w-4 h-4 ${uploadingVideo ? "animate-pulse" : ""}`} />
+        </MenuButton>
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={handleVideoUpload}
         />
 
         <div className="w-px bg-border mx-1 h-6" />
