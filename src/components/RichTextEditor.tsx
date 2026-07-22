@@ -192,51 +192,54 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     setShowColorPicker(false);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadAndInsert = async (
+    file: File,
+    kind: "image" | "video",
+    resetInput: () => void,
+  ) => {
     try {
-      setUploading(true);
+      if (kind === "video") setUploadingVideo(true); else setUploading(true);
+      const isVideo = file.type.startsWith("video/") || kind === "video";
       const ext = file.name.split(".").pop();
       const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from("article-media").upload(path, file, {
         cacheControl: "3600",
         upsert: false,
+        contentType: file.type || (isVideo ? "video/mp4" : undefined),
       });
       if (error) throw error;
       const { data } = supabase.storage.from("article-media").getPublicUrl(path);
-      editor.chain().focus().setImage({ src: data.publicUrl }).run();
-      toast.success("Image ajoutée");
+      if (isVideo) {
+        (editor.chain().focus() as any).setVideo({ src: data.publicUrl }).run();
+        toast.success("Vidéo ajoutée");
+      } else {
+        editor.chain().focus().setImage({ src: data.publicUrl }).run();
+        toast.success("Image ajoutée");
+      }
     } catch (err: any) {
       toast.error(err.message || "Erreur lors de l'upload");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setUploadingVideo(false);
+      resetInput();
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const kind = file.type.startsWith("video/") ? "video" : "image";
+    await uploadAndInsert(file, kind, () => {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    });
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      setUploadingVideo(true);
-      const ext = file.name.split(".").pop();
-      const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from("article-media").upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type,
-      });
-      if (error) throw error;
-      const { data } = supabase.storage.from("article-media").getPublicUrl(path);
-      (editor.chain().focus() as any).setVideo({ src: data.publicUrl }).run();
-      toast.success("Vidéo ajoutée");
-    } catch (err: any) {
-      toast.error(err.message || "Erreur lors de l'upload");
-    } finally {
-      setUploadingVideo(false);
+    await uploadAndInsert(file, "video", () => {
       if (videoInputRef.current) videoInputRef.current.value = "";
-    }
+    });
   };
 
   return (
@@ -396,7 +399,7 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           className="hidden"
           onChange={handleImageUpload}
         />
