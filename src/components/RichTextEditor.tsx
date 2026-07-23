@@ -16,7 +16,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Heading1, Heading2, Quote, Highlighter, Link as LinkIcon, Undo, Redo,
-  Type, Palette, ChevronDown, ImageIcon, Video as VideoIcon,
+  Type, Palette, ChevronDown, ImageIcon, Video as VideoIcon, Music as AudioIcon,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -132,14 +132,54 @@ const VideoExtension = Node.create({
   },
 });
 
+const AudioExtension = Node.create({
+  name: "audio",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      controls: { default: true },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "audio" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "audio",
+      mergeAttributes(HTMLAttributes, {
+        controls: "true",
+        preload: "metadata",
+        class: "my-3 w-full",
+      }),
+    ];
+  },
+  addCommands() {
+    return {
+      setAudio:
+        (options: { src: string }) =>
+        ({ commands }: any) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: options,
+          });
+        },
+    } as any;
+  },
+});
+
 const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -157,6 +197,7 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
         },
       }),
       VideoExtension,
+      AudioExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -194,22 +235,28 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
 
   const uploadAndInsert = async (
     file: File,
-    kind: "image" | "video",
+    kind: "image" | "video" | "audio",
     resetInput: () => void,
   ) => {
     try {
-      if (kind === "video") setUploadingVideo(true); else setUploading(true);
-      const isVideo = file.type.startsWith("video/") || kind === "video";
+      if (kind === "video") setUploadingVideo(true);
+      else if (kind === "audio") setUploadingAudio(true);
+      else setUploading(true);
+      const isAudio = file.type.startsWith("audio/") || kind === "audio";
+      const isVideo = !isAudio && (file.type.startsWith("video/") || kind === "video");
       const ext = file.name.split(".").pop();
       const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from("article-media").upload(path, file, {
         cacheControl: "3600",
         upsert: false,
-        contentType: file.type || (isVideo ? "video/mp4" : undefined),
+        contentType: file.type || (isVideo ? "video/mp4" : isAudio ? "audio/mpeg" : undefined),
       });
       if (error) throw error;
       const { data } = supabase.storage.from("article-media").getPublicUrl(path);
-      if (isVideo) {
+      if (isAudio) {
+        (editor.chain().focus() as any).setAudio({ src: data.publicUrl }).run();
+        toast.success("Audio ajouté");
+      } else if (isVideo) {
         (editor.chain().focus() as any).setVideo({ src: data.publicUrl }).run();
         toast.success("Vidéo ajoutée");
       } else {
@@ -221,6 +268,7 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     } finally {
       setUploading(false);
       setUploadingVideo(false);
+      setUploadingAudio(false);
       resetInput();
     }
   };
@@ -228,7 +276,11 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const kind = file.type.startsWith("video/") ? "video" : "image";
+    const kind = file.type.startsWith("audio/")
+      ? "audio"
+      : file.type.startsWith("video/")
+      ? "video"
+      : "image";
     await uploadAndInsert(file, kind, () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
     });
@@ -239,6 +291,14 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     if (!file) return;
     await uploadAndInsert(file, "video", () => {
       if (videoInputRef.current) videoInputRef.current.value = "";
+    });
+  };
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadAndInsert(file, "audio", () => {
+      if (audioInputRef.current) audioInputRef.current.value = "";
     });
   };
 
@@ -415,6 +475,19 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
           accept="video/*"
           className="hidden"
           onChange={handleVideoUpload}
+        />
+        <MenuButton
+          onClick={() => audioInputRef.current?.click()}
+          title="Insérer un audio"
+        >
+          <AudioIcon className={`w-4 h-4 ${uploadingAudio ? "animate-pulse" : ""}`} />
+        </MenuButton>
+        <input
+          ref={audioInputRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={handleAudioUpload}
         />
 
         <div className="w-px bg-border mx-1 h-6" />
