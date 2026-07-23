@@ -28,6 +28,7 @@ const ArticleCard = ({
   featured?: boolean;
   onClick: () => void;
 }) => {
+  const isVideoUrl = (url?: string | null) => !!url && /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(url);
   if (featured) {
     return (
       <motion.button
@@ -35,7 +36,17 @@ const ArticleCard = ({
         className="relative w-full rounded-xl overflow-hidden shadow-card group text-left"
         whileTap={{ scale: 0.98 }}
       >
-        {article.image_url ? (
+        {isVideoUrl(article.image_url) ? (
+          <video
+            src={article.image_url!}
+            className="w-full h-52 object-cover"
+            muted
+            playsInline
+            loop
+            autoPlay
+            preload="metadata"
+          />
+        ) : article.image_url ? (
           <img
             src={article.image_url}
             alt={article.title.replace(/<[^>]*>/g, "")}
@@ -69,7 +80,17 @@ const ArticleCard = ({
       className="flex gap-3 p-3 bg-card rounded-xl shadow-card text-left w-full"
       whileTap={{ scale: 0.98 }}
     >
-      {article.image_url ? (
+      {isVideoUrl(article.image_url) ? (
+        <video
+          src={article.image_url!}
+          className="w-24 h-20 rounded-lg object-cover flex-shrink-0"
+          muted
+          playsInline
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      ) : article.image_url ? (
         <img
           src={article.image_url}
           alt={article.title.replace(/<[^>]*>/g, "")}
