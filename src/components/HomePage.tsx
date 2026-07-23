@@ -28,6 +28,7 @@ const ArticleCard = ({
   featured?: boolean;
   onClick: () => void;
 }) => {
+  const isVideoUrl = (url?: string | null) => !!url && /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(url);
   if (featured) {
     return (
       <motion.button
@@ -35,7 +36,17 @@ const ArticleCard = ({
         className="relative w-full rounded-xl overflow-hidden shadow-card group text-left"
         whileTap={{ scale: 0.98 }}
       >
-        {article.image_url ? (
+        {isVideoUrl(article.image_url) ? (
+          <video
+            src={article.image_url!}
+            className="w-full h-52 object-cover"
+            muted
+            playsInline
+            loop
+            autoPlay
+            preload="metadata"
+          />
+        ) : article.image_url ? (
           <img
             src={article.image_url}
             alt={article.title.replace(/<[^>]*>/g, "")}
@@ -69,7 +80,17 @@ const ArticleCard = ({
       className="flex gap-3 p-3 bg-card rounded-xl shadow-card text-left w-full"
       whileTap={{ scale: 0.98 }}
     >
-      {article.image_url ? (
+      {isVideoUrl(article.image_url) ? (
+        <video
+          src={article.image_url!}
+          className="w-24 h-20 rounded-lg object-cover flex-shrink-0"
+          muted
+          playsInline
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      ) : article.image_url ? (
         <img
           src={article.image_url}
           alt={article.title.replace(/<[^>]*>/g, "")}
@@ -180,12 +201,22 @@ const ArticleDetail = ({
       className="min-h-screen bg-background pb-20"
     >
       <div className="relative">
-        {article.image_url ? (
+        {article.image_url && /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(article.image_url) ? (
+          <video
+            src={article.image_url}
+            className="w-full h-56 object-cover bg-black"
+            controls
+            playsInline
+            preload="metadata"
+          />
+        ) : article.image_url ? (
           <img src={article.image_url} alt={article.title.replace(/<[^>]*>/g, "")} className="w-full h-56 object-cover" />
         ) : (
           <div className="w-full h-56 bg-secondary" />
         )}
-        <div className="absolute inset-0 bg-hero-gradient" />
+        {!(article.image_url && /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(article.image_url)) && (
+          <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
+        )}
         <button
           onClick={onBack}
           className="absolute top-4 left-4 p-2 bg-card/80 backdrop-blur rounded-full"
@@ -437,7 +468,17 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                 className="relative w-full text-left"
                 onClick={() => setSelectedArticle(latestFive[slideIndex])}
               >
-                {latestFive[slideIndex]?.image_url ? (
+                {latestFive[slideIndex]?.image_url && /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(latestFive[slideIndex].image_url!) ? (
+                  <video
+                    src={latestFive[slideIndex].image_url!}
+                    className="w-full h-72 object-cover bg-black"
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                    preload="metadata"
+                  />
+                ) : latestFive[slideIndex]?.image_url ? (
                   <img
                     src={latestFive[slideIndex].image_url!}
                     alt={latestFive[slideIndex].title.replace(/<[^>]*>/g, "")}
