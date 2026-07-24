@@ -239,6 +239,12 @@ const RichTextEditor = ({ content, onChange }: RichTextEditorProps) => {
     resetInput: () => void,
   ) => {
     try {
+      const isAudioFile = file.type.startsWith("audio/") || kind === "audio";
+      if (isAudioFile && file.size > 5 * 1024 * 1024) {
+        toast.error("Le fichier audio doit faire 5 Mo maximum");
+        resetInput();
+        return;
+      }
       if (kind === "video") setUploadingVideo(true);
       else if (kind === "audio") setUploadingAudio(true);
       else setUploading(true);
