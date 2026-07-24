@@ -20,7 +20,7 @@ const timeAgo = (date: string) => {
 };
 
 // Strip HTML and truncate the title to `max` characters, appending an ellipsis.
-const truncateTitle = (html: string, max = 100) => {
+const truncateTitle = (html: string, max = 150) => {
   const text = (html || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
   return text.length > max ? text.slice(0, max).trimEnd() + "..." : text;
 };
