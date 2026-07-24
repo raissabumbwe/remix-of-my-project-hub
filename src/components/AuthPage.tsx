@@ -62,14 +62,14 @@ const AuthPage = ({ onSuccess }: AuthPageProps) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-40 bg-[#f3f4f6] flex flex-col"
+      className="fixed inset-0 z-40 bg-[#6b7280] flex flex-col"
     >
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <img src={logo} alt="Infoslight" className="h-20 object-contain mb-6" />
-        <h1 className="font-display text-2xl font-bold text-foreground mb-1">
+        <h1 className="font-display text-2xl font-bold text-white mb-1">
           {mode === "login" ? "Bienvenue" : "Créer un compte"}
         </h1>
-        <p className="text-sm text-muted-foreground mb-8 text-center">
+        <p className="text-sm text-white/80 mb-8 text-center">
           {mode === "login"
             ? "Connectez-vous pour accéder à l'actualité"
             : "Rejoignez la communauté Infoslight"}
@@ -78,36 +78,36 @@ const AuthPage = ({ onSuccess }: AuthPageProps) => {
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           {mode === "signup" && (
             <div>
-              <label className="text-xs font-medium text-foreground mb-1.5 block">Nom complet</label>
+              <label className="text-xs font-medium text-white mb-1.5 block">Nom complet</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Jean Dupont"
-                className="w-full h-11 px-4 bg-secondary rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+                className="w-full h-11 px-4 bg-white rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
                 required
               />
             </div>
           )}
           <div>
-            <label className="text-xs font-medium text-foreground mb-1.5 block">Email</label>
+            <label className="text-xs font-medium text-white mb-1.5 block">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@exemple.com"
-              className="w-full h-11 px-4 bg-secondary rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+              className="w-full h-11 px-4 bg-white rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
           <div className="relative">
-            <label className="text-xs font-medium text-foreground mb-1.5 block">Mot de passe</label>
+            <label className="text-xs font-medium text-white mb-1.5 block">Mot de passe</label>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-11 px-4 pr-12 bg-secondary rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+              className="w-full h-11 px-4 pr-12 bg-white rounded-xl text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
               required
               minLength={6}
             />
@@ -120,7 +120,7 @@ const AuthPage = ({ onSuccess }: AuthPageProps) => {
             </button>
           </div>
 
-          {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+          {error && <p className="text-xs text-white font-medium">{error}</p>}
 
           <button
             type="submit"
@@ -134,7 +134,7 @@ const AuthPage = ({ onSuccess }: AuthPageProps) => {
 
         <button
           onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
-          className="mt-6 text-sm text-primary font-medium"
+          className="mt-6 text-sm text-white font-medium"
         >
           {mode === "login" ? "Pas de compte ? Créer un compte" : "Déjà un compte ? Se connecter"}
         </button>
