@@ -377,25 +377,34 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
     };
     fetchArticles();
 
-    // Refetch when tab regains focus
-    const onFocus = () => fetchArticles();
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
-
-    // Realtime updates
+    // Realtime updates — only refresh when a published article is added or updated.
+    // We intentionally avoid focus/visibilitychange refetches to prevent the app from
+    // reloading and returning to Accueil while the admin edits a form.
     const channel = supabase
       .channel("articles-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "articles" },
+        { event: "INSERT", schema: "public", table: "articles" },
+        (payload: any) => {
+          if (payload?.new?.published) fetchArticles();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "articles" },
+        (payload: any) => {
+          if (payload?.new?.published || payload?.old?.published) fetchArticles();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "articles" },
         () => fetchArticles()
       )
       .subscribe();
 
     return () => {
       mounted = false;
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onFocus);
       supabase.removeChannel(channel);
     };
   }, []);
