@@ -19,6 +19,12 @@ const timeAgo = (date: string) => {
   }
 };
 
+// Strip HTML and truncate the title to `max` characters, appending an ellipsis.
+const truncateTitle = (html: string, max = 100) => {
+  const text = (html || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  return text.length > max ? text.slice(0, max).trimEnd() + "..." : text;
+};
+
 const ArticleCard = ({
   article,
   featured,
@@ -62,10 +68,9 @@ const ArticleCard = ({
           <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-2">
             {article.category}
           </span>
-          <div
-            className="text-primary-foreground font-display text-lg font-bold leading-snug line-clamp-2 rich-inline"
-            dangerouslySetInnerHTML={{ __html: article.title }}
-          />
+          <div className="text-primary-foreground font-display text-lg font-bold leading-snug">
+            {truncateTitle(article.title)}
+          </div>
           <p className="text-primary-foreground/70 text-xs mt-1 flex items-center gap-1">
             <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
           </p>
@@ -106,10 +111,9 @@ const ArticleCard = ({
         <span className="text-[10px] font-bold text-primary uppercase">
           {article.category}
         </span>
-        <div
-          className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug rich-inline"
-          dangerouslySetInnerHTML={{ __html: article.title }}
-        />
+        <div className="text-sm font-semibold text-foreground mt-0.5 leading-snug">
+          {truncateTitle(article.title)}
+        </div>
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Clock className="w-3 h-3" /> {timeAgo(article.created_at)}
         </p>
@@ -503,10 +507,9 @@ const HomePage = ({ initialCategory, onCategoryReset }: { initialCategory?: stri
                   <span className="inline-block px-2 py-0.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded uppercase mb-1.5">
                     {latestFive[slideIndex].category}
                   </span>
-                  <div
-                    className="text-white font-display text-base font-bold leading-snug line-clamp-2 rich-inline"
-                    dangerouslySetInnerHTML={{ __html: latestFive[slideIndex].title }}
-                  />
+                  <div className="text-white font-display text-base font-bold leading-snug">
+                    {truncateTitle(latestFive[slideIndex].title)}
+                  </div>
                   <p className="text-white/70 text-xs mt-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {timeAgo(latestFive[slideIndex].created_at)}
                   </p>
