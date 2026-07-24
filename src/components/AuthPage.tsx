@@ -62,7 +62,7 @@ const AuthPage = ({ onSuccess }: AuthPageProps) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-40 bg-background flex flex-col"
+      className="fixed inset-0 z-40 bg-[#f3f4f6] flex flex-col"
     >
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <img src={logo} alt="Infoslight" className="h-20 object-contain mb-6" />
